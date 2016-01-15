@@ -15,7 +15,7 @@ define(['jquery', 'backbone', 'underscore', 'gettext', 'js/views/baseview',
     'use strict';
     var CourseOutlineXBlockModal, SettingsXBlockModal, PublishXBlockModal, AbstractEditor, BaseDateEditor,
         ReleaseDateEditor, DueDateEditor, GradingEditor, PublishEditor, AbstractVisibilityEditor, StaffLockEditor,
-        ContentVisibilityEditor, VerificationAccessEditor, TimedExaminationPreferenceEditor, AccessEditor;
+        ContentVisibilityEditor, VerificationAccessEditor, TimedExaminationPreferenceEditor, AccessEditor, IconEditor;
 
     CourseOutlineXBlockModal = BaseModal.extend({
         events: _.extend({}, BaseModal.prototype.events, {
@@ -234,7 +234,6 @@ define(['jquery', 'backbone', 'underscore', 'gettext', 'js/views/baseview',
                 enable_proctored_exam: this.options.enable_proctored_exams,
                 enable_timed_exam: this.options.enable_timed_exams
             }, this.getContext()));
-
             HtmlUtils.setHtml(this.$el, HtmlUtils.HTML(html));
             this.parentElement.append(this.$el);
         },
@@ -292,6 +291,28 @@ define(['jquery', 'backbone', 'underscore', 'gettext', 'js/views/baseview',
                     'due': this.getValue()
                 }
             };
+        }
+    });
+
+    IconEditor = BaseDateEditor.extend({
+        fieldName: 'icon',
+        templateName: 'icon-editor',
+
+        hasChanges: function() {
+            return this.model.get("icon") != parseInt(this.$('#icon').val());
+        },
+
+        getValue: function () {
+            return (parseInt(this.$('#icon').val()));
+        },
+
+        getRequestData: function () {
+            return this.hasChanges() ? {
+                publish: 'republish',
+                metadata: {
+                    'icon': this.getValue()
+                }
+            } : {};
         }
     });
 
@@ -832,9 +853,23 @@ define(['jquery', 'backbone', 'underscore', 'gettext', 'js/views/baseview',
         getEditModal: function(xblockInfo, options) {
             var tabs = [];
             var editors = [];
-            if (xblockInfo.isVertical()) {
-                editors = [StaffLockEditor];
+            var special_exam_editors = [];
 
+            if (xblockInfo.isChapter()) {
+                editors = [ReleaseDateEditor, StaffLockEditor];
+            } else if (xblockInfo.isSequential()) {
+                editors = [ReleaseDateEditor, GradingEditor, DueDateEditor];
+
+                var enable_special_exams = (options.enable_proctored_exams || options.enable_timed_exams);
+                if (enable_special_exams) {
+                    special_exam_editors.push(TimedExaminationPreferenceEditor);
+                }
+
+                editors.push(StaffLockEditor);
+
+            } else if (xblockInfo.isVertical()) {
+                editors = [StaffLockEditor, IconEditor];
+            }
                 if (xblockInfo.hasVerifiedCheckpoints()) {
                     editors.push(VerificationAccessEditor);
                 }

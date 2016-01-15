@@ -2175,6 +2175,13 @@ class CourseEnrollmentAttribute(models.Model):
             for attribute in cls.objects.filter(enrollment=enrollment)
         ]
 
+class Announcements(models.Model):
+
+    announcement = models.CharField(max_length=1000, null=False, default="lorem ipsum")
+    announcement_id = models.IntegerField(default=1)
+
+    def __unicode__(self):
+        return self.announcement
 
 class EnrollmentRefundConfiguration(ConfigurationModel):
     """
@@ -2205,7 +2212,6 @@ class EnrollmentRefundConfiguration(ConfigurationModel):
     def refund_window(self, refund_window):
         """Set the current refund window to the given timedelta."""
         self.refund_window_microseconds = int(refund_window.total_seconds() * 1000000)
-
 
 class UserAttribute(TimeStampedModel):
     """

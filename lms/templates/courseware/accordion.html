@@ -63,25 +63,19 @@ else:
                         ## non-proctored section, we just show the exam format and the due date
                         ## this is the standard case in edx-platform
                         <span class="subtitle-name">${section['format']} ${due_date}</span>
-
-                        % if 'graded' in section and section['graded']:
-                            <span class="menu-icon icon fa fa-pencil-square-o" aria-hidden="true"></span>
-                            <span class="sr">${_("This content is graded")}</span>
-                        % endif
-                    % endif
-                </p>
-                % endif
+              % if 'graded' in section and section['graded']:
+                  <img src="/static/images/graded.png" alt="Graded Section">
+              % endif
             </a>
-        </div>
-        % endfor
-    </div>
-</div>
+          </li>
+      % endfor
+    </ul>
+  </div>
 </%def>
 
 % for chapter in toc:
     ${make_chapter(chapter)}
 % endfor
-
 
 % if toc:
     <%static:require_module_async module_name="js/courseware/accordion_events" class_name="AccordionEvents">

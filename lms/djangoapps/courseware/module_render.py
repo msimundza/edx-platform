@@ -117,8 +117,41 @@ def make_track_function(request):
         return track.views.server_track(request, event_type, event, page='x_module')
     return function
 
+def get_course_module(user, request, course, course_key):
+    field_data_cache = FieldDataCache.cache_for_descriptor_descendents(
+        course_key, user, course, depth=2)
+    course_module = get_module_for_descriptor(user, request, course, field_data_cache, course_key)
+    return course_module
+
+
+def get_prev_next_section(user, request, course, course_key, active_chapter, active_section):
+    '''
+    Find the previous and next sections around the current one.
+    Return format:
+    ( {'display_name':name, 'url_name':url_name},
+      {'display_name':name, 'url_name':url_name} )
+    '''        
+    course_module = get_course_module(user, request, course, course_key)
+    if course_module is None:
+        return (None, None)
+    for chapter in course_module.get_display_items():
+        prev_section = None
+        next_section = None
+
+        sections = chapter.get_display_items()
+        for index, section in enumerate(sections):
+            active = (chapter.url_name == active_chapter
+                      and section.url_name == active_section)
+            if active:
+                if (index + 1 < len(sections)):
+                    next_section = sections[index + 1]
+                return (prev_section, next_section)
+
+            prev_section = section
+    return (None, None)
 
 def toc_for_course(user, request, course, active_chapter, active_section, field_data_cache):
+
     '''
     Create a table of contents from the module store
 
@@ -360,6 +393,7 @@ def get_module_for_descriptor(user, request, descriptor, field_data_cache, cours
 
     See get_module() docstring for further details.
     """
+
     track_function = make_track_function(request)
     xqueue_callback_url_prefix = get_xqueue_callback_url_prefix(request)
 
@@ -770,6 +804,12 @@ def get_module_system_for_user(user, student_data,  # TODO  # pylint: disable=to
 
     system.set('position', position)
 
+    if settings.FEATURES.get('ENABLE_PSYCHOMETRICS') and user.is_authenticated():
+        system.set(
+            'psychometrics_handler',  # set callback for updating PsychometricsData
+            make_psychometrics_data_update_handler(course_id, user, descriptor.location)
+        )
+
     system.set(u'user_is_staff', user_is_staff)
     system.set(u'user_is_admin', bool(has_access(user, u'staff', 'global')))
     system.set(u'user_is_beta_tester', CourseBetaTesterRole(course_id).has_user(user))
@@ -784,8 +824,6 @@ def get_module_system_for_user(user, student_data,  # TODO  # pylint: disable=to
     return system, field_data
 
 
-# TODO: Find all the places that this method is called and figure out how to
-# get a loaded course passed into it
 def get_module_for_descriptor_internal(user, descriptor, student_data, course_id,  # pylint: disable=invalid-name
                                        track_function, xqueue_callback_url_prefix, request_token,
                                        position=None, wrap_xmodule_display=True, grade_bucket_type=None,
@@ -793,9 +831,7 @@ def get_module_for_descriptor_internal(user, descriptor, student_data, course_id
                                        course=None):
     """
     Actually implement get_module, without requiring a request.
-
     See get_module() docstring for further details.
-
     Arguments:
         request_token (str): A unique token for this request, used to isolate xblock rendering
     """
@@ -837,6 +873,8 @@ def get_module_for_descriptor_internal(user, descriptor, student_data, course_id
         if not has_access(user, 'load', descriptor, course_id):
             return None
     return descriptor
+
+
 
 
 def load_single_xblock(request, user_id, course_id, usage_key_string, course=None):
@@ -1112,6 +1150,7 @@ def xblock_view(request, course_id, usage_id, view_name):
 
     try:
         course_key = SlashSeparatedCourseKey.from_deprecated_string(course_id)
+        fragment = instance.fview_name, context=request.GET
     except InvalidKeyError:
         raise Http404("Invalid location")
 

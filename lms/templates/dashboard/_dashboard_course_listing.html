@@ -185,6 +185,7 @@ from student.helpers import (
                 <span class="fa fa-cog" aria-hidden="true"></span>
               </button>
               <div class="actions-dropdown" id="actions-dropdown-${dashboard_index}" tabindex="-1">
+
                 <ul class="actions-dropdown-list" id="actions-dropdown-list-${dashboard_index}" aria-label="${_('Available Actions')}" role="menu">
                   % if can_unenroll:
                     <li class="actions-item" id="actions-item-unenroll-${dashboard_index}">
@@ -297,7 +298,7 @@ from student.helpers import (
 
       % if credit_status is not None:
         <%include file="_dashboard_credit_info.html" args="credit_status=credit_status"/>
-      % endif
+      % endif 
 
         % if verification_status.get('status') in [VERIFY_STATUS_NEED_TO_VERIFY, VERIFY_STATUS_SUBMITTED, VERIFY_STATUS_APPROVED, VERIFY_STATUS_NEED_TO_REVERIFY] and not is_course_blocked:
         <div class="message message-status wrapper-message-primary is-shown">

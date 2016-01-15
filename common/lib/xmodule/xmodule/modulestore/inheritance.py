@@ -45,6 +45,11 @@ class InheritanceMixin(XBlockMixin):
         help=_("Enter the default date by which problems are due."),
         scope=Scope.settings,
     )
+    icon = Integer(
+        display_name=_("Icon"),
+        default=0,
+        scope=Scope.settings,
+    )
     visible_to_staff_only = Boolean(
         help=_("If true, can be seen only by course staff, regardless of start date."),
         default=False,

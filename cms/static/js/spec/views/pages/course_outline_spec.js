@@ -238,7 +238,8 @@ define(['jquery', 'edx-ui-toolkit/js/utils/spec-helpers/ajax-helpers', 'common/j
                     'basic-modal', 'course-outline-modal', 'release-date-editor',
                     'due-date-editor', 'grading-editor', 'publish-editor',
                     'staff-lock-editor', 'content-visibility-editor', 'settings-modal-tabs',
-                    'timed-examination-preference-editor', 'access-editor'
+                    'timed-examination-preference-editor', 'access-editor',
+                    'settings-tab-section', 'icon-editor'
                 ]);
                 appendSetFixtures(mockOutlinePage);
                 mockCourseJSON = createMockCourseJSON({}, [

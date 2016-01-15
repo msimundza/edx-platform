@@ -1,0 +1,49 @@
+<%! from django.utils.translation import ugettext as _ %>
+<%inherit file="../base_mass.html" />
+
+<%block name="content">
+<div class="wrapper-mast wrapper sr">
+  <header class="mast">
+    <h1 class="page-header">
+      ${_("{studio_name} Mass Account Import").format(studio_name=settings.STUDIO_SHORT_NAME)}
+    </h1>
+  </header>
+</div>
+
+<div id="upload-users-file" class="wrapper-content wrapper">
+  <section class="content activation is-active">
+    <article class="content-primary" role="main">
+    </article>
+
+    <div class="notice notice-incontext notice-instruction has-actions hmsupload">
+      <div class="msg">
+        <h2 class="title">${_("Upload users from file")}</h2>
+        <div class="copy">
+          <p>${_("Please choose a file which contains all the users you want to upload to the system")}</p>
+          <p>${_("After submiting file you will be redirected to another page to preview and create accounts and download new XSLX document which will uploaded to S3 for safekeeping.")}</p>
+        </div>
+        <div class="up-message copy">
+          <h3>${_("Choose XSLX file: ")}</h3>
+        </div>
+        <div class="upload-form-hms">
+        %if request.user.is_authenticated:
+            <form enctype="multipart/form-data" method="post" action="/create_mass_accounts/">
+               <input type="hidden" name="csrfmiddlewaretoken" value="${csrf_token}">
+               <table>
+                   ${form}
+                </table>
+                <span class="btn btn-default btn-file">
+                    <input type="submit" value="Submit" id="Save" />
+                </span>
+            </form>
+            
+        %else:
+            <p>You must be logged to upload a file</p>
+        %endif
+        </div>
+      </div>
+
+    </div>
+  </section>
+</div>
+</%block>

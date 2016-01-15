@@ -3,9 +3,29 @@ Student Views
 """
 import datetime
 import logging
+import re
 import uuid
 import json
+
 import warnings
+import StringIO
+#import StringIO
+import urlparse
+# import branding for enroll
+import branding
+
+# for upload to s3
+import boto
+import boto.s3
+import sys
+from boto.s3.key import Key
+import time
+import os
+
+from openpyxl import Workbook
+from openpyxl import load_workbook
+from openpyxl.writer.excel import save_virtual_workbook
+
 from collections import defaultdict
 from urlparse import urljoin, urlsplit, parse_qs, urlunsplit
 
@@ -25,6 +45,7 @@ from django.core.context_processors import csrf
 from django.core import mail
 from django.core.urlresolvers import reverse, NoReverseMatch, reverse_lazy
 from django.core.validators import validate_email, ValidationError
+from django.core.exceptions import ObjectDoesNotExist
 from django.db import IntegrityError, transaction
 from django.http import HttpResponse, HttpResponseBadRequest, HttpResponseForbidden, HttpResponseServerError, Http404
 from django.shortcuts import redirect
@@ -38,13 +59,14 @@ from django.db.models.signals import post_save
 from django.dispatch import receiver, Signal
 from django.template.response import TemplateResponse
 from provider.oauth2.models import Client
+from dark_lang.models import DarkLangConfig
 from ratelimitbackend.exceptions import RateLimitException
 
 from social.apps.django_app import utils as social_utils
 from social.backends import oauth as social_oauth
-from social.exceptions import AuthException, AuthAlreadyAssociated
 
 from edxmako.shortcuts import render_to_response, render_to_string
+from mako.exceptions import TopLevelLookupException
 
 from course_modes.models import CourseMode
 from shoppingcart.api import order_history
@@ -53,10 +75,12 @@ from student.models import (
     PendingEmailChange, CourseEnrollment, CourseEnrollmentAttribute, unique_id_for_user,
     CourseEnrollmentAllowed, UserStanding, LoginFailures,
     create_comments_service_user, PasswordHistory, UserSignupSource,
-    DashboardConfiguration, LinkedInAddToProfileConfiguration, ManualEnrollmentAudit, ALLOWEDTOENROLL_TO_ENROLLED,
+    DashboardConfiguration, LinkedInAddToProfileConfiguration, Announcements, ManualEnrollmentAudit, ALLOWEDTOENROLL_TO_ENROLLED,
     LogoutViewConfiguration)
-from student.forms import AccountCreationForm, PasswordResetFormNoActive, get_registration_extension_form
+from student.forms import AccountCreationForm, PasswordResetFormNoActive, get_registration_extension_form, AccountMassCreationFormUpload
 from lms.djangoapps.commerce.utils import EcommerceService  # pylint: disable=import-error
+
+
 from lms.djangoapps.verify_student.models import SoftwareSecurePhotoVerification  # pylint: disable=import-error
 from bulk_email.models import Optout, BulkEmailFlag  # pylint: disable=import-error
 from certificates.models import CertificateStatuses, certificate_status_for_student
@@ -69,6 +93,9 @@ from xmodule.modulestore.django import modulestore
 from opaque_keys import InvalidKeyError
 from opaque_keys.edx.keys import CourseKey
 from opaque_keys.edx.locations import SlashSeparatedCourseKey
+# edx keys for the course KEy 
+from opaque_keys.edx.keys import CourseKey
+
 from opaque_keys.edx.locator import CourseLocator
 
 from collections import namedtuple
@@ -86,11 +113,13 @@ from external_auth.login_and_register import (
 )
 
 from lang_pref import LANGUAGE_KEY
+from notification_prefs.views import enable_notifications
 
 import track.views
 
 import dogstats_wrapper as dog_stats_api
 
+from util.file import store_uploaded_file
 from util.db import outer_atomic
 from util.json_request import JsonResponse
 from util.bad_request_rate_limiter import BadRequestRateLimiter
@@ -125,7 +154,6 @@ from openedx.core.djangoapps.programs import utils as programs_utils
 from openedx.core.djangoapps.site_configuration import helpers as configuration_helpers
 from openedx.core.djangoapps.theming import helpers as theming_helpers
 
-
 log = logging.getLogger("edx.student")
 AUDIT_LOG = logging.getLogger("audit")
 ReverifyInfo = namedtuple('ReverifyInfo', 'course_id course_name course_number date status display')  # pylint: disable=invalid-name
@@ -137,7 +165,6 @@ REGISTER_USER = Signal(providing_args=["user", "profile"])
 
 # Disable this warning because it doesn't make sense to completely refactor tests to appease Pylint
 # pylint: disable=logging-format-interpolation
-
 
 def csrf_token(context):
     """A csrf token that can be included in a form."""
@@ -194,9 +221,7 @@ def index(request, extra_context=None, user=AnonymousUser()):
 
     # Insert additional context for use in the template
     context.update(extra_context)
-
     return render_to_response('index.html', context)
-
 
 def process_survey_link(survey_link, user):
     """
@@ -442,6 +467,11 @@ def signin_user(request):
 
 @ensure_csrf_cookie
 def register_user(request, extra_context=None):
+    
+    # Redirect to dashboard because there is no Registration open for the HMS
+    if settings.FEATURES.get('USE_DEFAULT_REGISTRATION') == False :
+        return redirect(reverse('dashboard'))
+
     """Deprecated. To be replaced by :class:`student_account.views.login_and_registration_form`."""
     # Determine the URL to redirect to following login:
     redirect_to = get_next_url_for_login_page(request)
@@ -592,7 +622,7 @@ def dashboard(request):
     if not user.is_active:
         message = render_to_string(
             'registration/activate_account_notice.html',
-            {'email': user.email, 'platform_name': platform_name}
+            {'email': user.email, 'platform_name': settings.PLATFORM_NAME}
         )
 
     # Global staff can see what courses errored on their dashboard
@@ -687,6 +717,29 @@ def dashboard(request):
     # we'll display the banner
     denied_banner = any(item.display for item in reverifications["denied"])
 
+    language_options = DarkLangConfig.current().released_languages_list
+
+    # add in the default language if it's not in the list of released languages
+    if settings.LANGUAGE_CODE not in language_options:
+        language_options.append(settings.LANGUAGE_CODE)
+        # Re-alphabetize language options
+        language_options.sort()
+
+    # try to get the prefered language for the user
+    cur_pref_lang_code = None
+    # try and get the current language of the user
+    cur_lang_code = get_language()
+    if cur_pref_lang_code and cur_pref_lang_code in settings.LANGUAGE_DICT:
+        # if the user has a preference, get the name from the code
+        current_language = settings.LANGUAGE_DICT[cur_pref_lang_code]
+    elif cur_lang_code in settings.LANGUAGE_DICT:
+        # if the user's browser is showing a particular language,
+        # use that as the current language
+        current_language = settings.LANGUAGE_DICT[cur_lang_code]
+    else:
+        # otherwise, use the default language
+        current_language = settings.LANGUAGE_DICT[settings.LANGUAGE_CODE]
+
     # Populate the Order History for the side-bar.
     order_history_list = order_history(user, course_org_filter=course_org_filter, org_filter_out_set=org_filter_out_set)
 
@@ -707,6 +760,12 @@ def dashboard(request):
         )
     else:
         redirect_message = ''
+
+    try:
+        announcements = Announcements.objects.get(announcement_id=1)
+
+    except Exception, error:
+        print str(error)
 
     context = {
         'enrollment_message': enrollment_message,
@@ -729,9 +788,13 @@ def dashboard(request):
         'block_courses': block_courses,
         'denied_banner': denied_banner,
         'billing_email': settings.PAYMENT_SUPPORT_EMAIL,
+        'language_options': language_options,
+        'current_language': current_language,
+        'current_language_code': cur_lang_code,
         'user': user,
         'logout_url': reverse('logout'),
         'platform_name': platform_name,
+        'duplicate_provider': None,
         'enrolled_courses_either_paid': enrolled_courses_either_paid,
         'provider_states': [],
         'order_history_list': order_history_list,
@@ -740,6 +803,7 @@ def dashboard(request):
         'programs_by_run': programs_by_run,
         'show_program_listing': ProgramsApiConfig.current().show_program_listing,
         'disable_courseware_js': True,
+        'announcements': announcements.announcement
     }
 
     ecommerce_service = EcommerceService()
@@ -748,6 +812,13 @@ def dashboard(request):
             'use_ecommerce_payment_flow': True,
             'ecommerce_payment_page': ecommerce_service.payment_page_url(),
         })
+
+    if third_party_auth.is_enabled():
+        context['duplicate_provider'] = pipeline.get_duplicate_provider(messages.get_messages(request))
+        context['provider_user_states'] = pipeline.get_provider_user_states(user)
+
+    if user.is_active == False:
+        return HttpResponse(_("you are not verificated to view courses"))
 
     response = render_to_response('dashboard.html', context)
     set_user_info_cookie(response, request, user)
@@ -786,7 +857,7 @@ def _create_recent_enrollment_message(course_enrollments, course_modes):  # pyli
 
         return render_to_string(
             'enrollment/course_enrollment_message.html',
-            {'course_enrollment_messages': enroll_messages, 'platform_name': platform_name}
+            {'course_enrollment_messages': messages, platform_name}
         )
 
 
@@ -847,13 +918,16 @@ def _allow_donation(course_modes, course_id, enrollment):
     )
 
 
-def _update_email_opt_in(request, org):
+def _update_email_opt_in(request, username, org):
     """Helper function used to hit the profile API if email opt-in is enabled."""
+
+    # TODO: remove circular dependency on openedx from common
+    from openedx.core.djangoapps.user_api.api import profile as profile_api
 
     email_opt_in = request.POST.get('email_opt_in')
     if email_opt_in is not None:
         email_opt_in_boolean = email_opt_in == 'true'
-        preferences_api.update_email_opt_in(request.user, org, email_opt_in_boolean)
+        profile_api.update_email_opt_in(username, org, email_opt_in_boolean)
 
 
 def _credit_statuses(user, course_enrollments):
@@ -1051,7 +1125,7 @@ def change_enrollment(request, check_access=True):
 
         # Record the user's email opt-in preference
         if settings.FEATURES.get('ENABLE_MKTG_EMAIL_OPT_IN'):
-            _update_email_opt_in(request, course_id.org)
+            _update_email_opt_in(request, user.username, course_id.org)
 
         available_modes = CourseMode.modes_for_course_dict(course_id)
 
@@ -1085,9 +1159,9 @@ def change_enrollment(request, check_access=True):
 
         # If we have more than one course mode or professional ed is enabled,
         # then send the user to the choose your track page.
-        # (In the case of no-id-professional/professional ed, this will redirect to a page that
+        # (In the case of professional ed, this will redirect to a page that
         # funnels users directly into the verification / payment flow)
-        if CourseMode.has_verified_mode(available_modes) or CourseMode.has_professional_mode(available_modes):
+        if CourseMode.has_verified_mode(available_modes):
             return HttpResponse(
                 reverse("course_modes_choose", kwargs={'course_id': unicode(course_id)})
             )
@@ -1350,10 +1424,11 @@ def login_oauth_token(request, backend):
     warnings.warn("Please use AccessTokenExchangeView instead.", DeprecationWarning)
 
     backend = request.backend
+
     if isinstance(backend, social_oauth.BaseOAuth1) or isinstance(backend, social_oauth.BaseOAuth2):
         if "access_token" in request.POST:
             # Tell third party auth pipeline that this is an API call
-            request.session[pipeline.AUTH_ENTRY_KEY] = pipeline.AUTH_ENTRY_LOGIN_API
+            request.session[pipeline.AUTH_ENTRY_KEY] = pipeline.AUTH_ENTRY_API
             user = None
             try:
                 user = backend.do_auth(request.POST["access_token"])
@@ -1506,6 +1581,8 @@ def _do_create_account(form, custom_form=None):
         email=form.cleaned_data["email"],
         is_active=False
     )
+    user.first_name = form.cleaned_data["first_name"]
+    user.last_name = form.cleaned_data["last_name"]
     user.set_password(form.cleaned_data["password"])
     registration = Registration()
 
@@ -1557,6 +1634,11 @@ def _do_create_account(form, custom_form=None):
         log.exception("UserProfile creation failed for user {id}.".format(id=user.id))
         raise
 
+    # TODO: remove circular dependency on openedx from common
+    from openedx.core.djangoapps.user_api.models import UserPreference
+
+    UserPreference.set_preference(user, LANGUAGE_KEY, get_language())
+
     return (user, profile, registration)
 
 
@@ -1573,19 +1655,6 @@ def create_account_with_params(request, params):
     Raises AccountValidationError if an account with the username or email
     specified by params already exists, or ValidationError if any of the given
     parameters is invalid for any other reason.
-
-    Issues with this code:
-    * It is not transactional. If there is a failure part-way, an incomplete
-      account will be created and left in the database.
-    * Third-party auth passwords are not verified. There is a comment that
-      they are unused, but it would be helpful to have a sanity check that
-      they are sane.
-    * It is over 300 lines long (!) and includes disprate functionality, from
-      registration e-mails to all sorts of other things. It should be broken
-      up into semantically meaningful functions.
-    * The user-facing text is rather unfriendly (e.g. "Username must be a
-      minimum of two characters long" rather than "Please use a username of
-      at least two characters").
     """
     # Copy params so we can modify it; we can't just do dict(params) because if
     # params is request.POST, that results in a dict containing lists of values
@@ -1597,14 +1666,7 @@ def create_account_with_params(request, params):
         getattr(settings, 'REGISTRATION_EXTRA_FIELDS', {})
     )
 
-    # Boolean of whether a 3rd party auth provider and credentials were provided in
-    # the API so the newly created account can link with the 3rd party account.
-    #
-    # Note: this is orthogonal to the 3rd party authentication pipeline that occurs
-    # when the account is created via the browser and redirect URLs.
-    should_link_with_social_auth = third_party_auth.is_enabled() and 'provider' in params
-
-    if should_link_with_social_auth or (third_party_auth.is_enabled() and pipeline.running(request)):
+    if third_party_auth.is_enabled() and pipeline.running(request):
         params["password"] = pipeline.make_random_password()
 
     # if doing signup for an external authorization, then get email, password, name from the eamap
@@ -1649,47 +1711,14 @@ def create_account_with_params(request, params):
         extended_profile_fields=extended_profile_fields,
         enforce_username_neq_password=True,
         enforce_password_policy=enforce_password_policy,
-        tos_required=tos_required,
+        tos_required=tos_required
     )
     custom_form = get_registration_extension_form(data=params)
 
-    # Perform operations within a transaction that are critical to account creation
-    with transaction.atomic():
-        # first, create the account
-        (user, profile, registration) = _do_create_account(form, custom_form)
+    with transaction.commit_on_success():
+        ret = _do_create_account(form)
 
-        # next, link the account with social auth, if provided via the API.
-        # (If the user is using the normal register page, the social auth pipeline does the linking, not this code)
-        if should_link_with_social_auth:
-            backend_name = params['provider']
-            request.social_strategy = social_utils.load_strategy(request)
-            redirect_uri = reverse('social:complete', args=(backend_name, ))
-            request.backend = social_utils.load_backend(request.social_strategy, backend_name, redirect_uri)
-            social_access_token = params.get('access_token')
-            if not social_access_token:
-                raise ValidationError({
-                    'access_token': [
-                        _("An access_token is required when passing value ({}) for provider.").format(
-                            params['provider']
-                        )
-                    ]
-                })
-            request.session[pipeline.AUTH_ENTRY_KEY] = pipeline.AUTH_ENTRY_REGISTER_API
-            pipeline_user = None
-            error_message = ""
-            try:
-                pipeline_user = request.backend.do_auth(social_access_token, user=user)
-            except AuthAlreadyAssociated:
-                error_message = _("The provided access_token is already associated with another user.")
-            except (HTTPError, AuthException):
-                error_message = _("The provided access_token is not valid.")
-            if not pipeline_user or not isinstance(pipeline_user, User):
-                # Ensure user does not re-enter the pipeline
-                request.social_strategy.clean_partial_pipeline()
-                raise ValidationError({'access_token': [error_message]})
-
-    # Perform operations that are non-critical parts of account creation
-    preferences_api.set_user_preference(user, LANGUAGE_KEY, get_language())
+    (user, profile, registration) = ret
 
     if settings.FEATURES.get('ENABLE_DISCUSSION_EMAIL_DIGEST'):
         try:
@@ -1755,20 +1784,20 @@ def create_account_with_params(request, params):
 
     create_comments_service_user(user)
 
-    # Don't send email if we are:
-    #
-    # 1. Doing load testing.
-    # 2. Random user generation for other forms of testing.
-    # 3. External auth bypassing activation.
-    # 4. Have the platform configured to not require e-mail activation.
-    # 5. Registering a new user using a trusted third party provider (with skip_email_verification=True)
-    #
-    # Note that this feature is only tested as a flag set one way or
-    # the other for *new* systems. we need to be careful about
-    # changing settings on a running system to make sure no users are
-    # left in an inconsistent state (or doing a migration if they are).
+    context = {
+        'name': profile.name,
+        'key': registration.activation_key,
+    }
+
+    # composes activation email
+    subject = render_to_string('emails/activation_email_subject.txt', context)
+    # Email subject *must not* contain newlines
+    subject = ''.join(subject.splitlines())
+    message = render_to_string('emails/activation_email.txt', context)
+
+    # don't send email if we are doing load testing or random user generation for some reason
+    # or external auth with bypass activated
     send_email = (
-        not settings.FEATURES.get('SKIP_EMAIL_VALIDATION', None) and
         not settings.FEATURES.get('AUTOMATIC_AUTH_FOR_TESTING') and
         not (do_external_auth and settings.FEATURES.get('BYPASS_ACTIVATION_EMAIL_FOR_EXTAUTH')) and
         not (
@@ -1841,7 +1870,6 @@ def create_account_with_params(request, params):
 
     return new_user
 
-
 def _enroll_user_in_pending_courses(student):
     """
     Enroll student in any pending courses he/she may have.
@@ -1871,14 +1899,550 @@ def _record_registration_attribution(request, user):
         UserAttribute.set_user_attribute(user, REGISTRATION_AFFILIATE_ID, affiliate_id)
 
 
+# mass user cration from the uploaded file
+@csrf_exempt
+def create_mass_accounts(request):
+    
+    external_auth_response = external_auth_login(request)
+    if external_auth_response is not None:
+        return external_auth_response
+    if not request.user.is_staff:
+        return redirect(reverse('home'))
+
+    if request.method == 'POST':
+                     
+        form = AccountMassCreationFormUpload(request.POST, request.FILES)
+        max_size = int(2000000)
+        new_file_name = ""
+        messages = []
+        
+        if form.is_valid():
+            base_file_name = "users"
+            err_messages = ""
+            
+            try:
+                file_storage, new_file_name = store_uploaded_file(request, 'file', ['.xlsx'], base_file_name, max_file_size=max_size)
+                
+            except Exception, error:
+                print str(error)
+                err_messages = "Error " + str(error)
+                
+            else:
+                print "Everything looks great!"
+                # if the file is saved on the server
+                
+                
+                filename = '/edx/var/edxapp/uploads/' + new_file_name
+                wb2 = load_workbook(filename, use_iterators=True)
+                
+                ws = wb2.worksheets[0]
+                output_row_count = 0
+                print_rows = []
+                
+                # Create new xslx file to download
+                downloadable_workbook = Workbook()
+                workbook_sheet = downloadable_workbook.create_sheet()
+                
+                # Output will have the same number of rows as entered file
+                for row in ws.iter_rows(row_offset=1):
+    
+                    if not row[0].value == None:
+                        message = {}
+                        
+                        username = row[2].value
+                        password = 'hms-test'
+                        email = row[3].value
+                        first_name = row[0].value
+                        last_name = row[1].value
+                        name = row[0].value
+                        is_staff = None
+                        course_id = None
+                        is_active = None
+                        flag = ""
+                        
+                        form_user = AccountCreationForm(
+                            data={
+                                'username': username,
+                                'email': email,
+                                'password': password,
+                                'first_name': first_name,
+                                'last_name': last_name,
+                                'name': name
+                            },
+                            tos_required=False
+                        )
+                        
+                        try:
+                            user, _profile, reg = _do_create_account(form_user)
+                            message = "User "+username+" is created"
+                            flag = "created"
+                        except AccountValidationError:
+                            # Attempt to retrieve the existing user.
+                            try:
+                                user = User.objects.get(username=username)
+                                user.email = email
+                                user.set_password(password)
+                                user.save()
+                                message = "User "+username+ " is updated!"
+                                reg = Registration.objects.get(user=user)
+                                flag = "updated"
+                                
+                            except Exception, error:
+                                message = "User already exists with that email "+email
+                                flag = "failed"
+                        except Exception, error:
+                            print str(error)
+                                    
+                        if not flag == "failed":
+                            output_row_count += 1       
+                            workbook_sheet.cell(row=output_row_count,column=1).value = user.username
+                            workbook_sheet.cell(row=output_row_count,column=2).value = user.email
+                            workbook_sheet.cell(row=output_row_count,column=3).value = reg.activation_key
+                            workbook_sheet.cell(row=output_row_count,column=4).value = flag
+                        
+                    messages.append(message)
+                # endfor
+                
+                # return response to user
+                response = HttpResponse(save_virtual_workbook(downloadable_workbook), content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet') 
+                return response 
+            
+            finally:
+                print "Everything passed as it should"
+                #return render_to_response('mass_user/upload.html', {'form': form, 'request': request, 'uploaded': False, 'messages': err_messages, 'path': 'test'})
+                
+            # end try-catch
+    else:
+        form = AccountMassCreationFormUpload()
+
+        return render_to_response('mass_user/upload.html', {'form': form, 'request': request, 'uploaded': False, 'messages': '', 'path': 'test'})
+
+@csrf_exempt
+def download_user_list(request):    
+    if request.method == 'POST':
+        try:
+            if request.POST["active"]:
+                active = True
+        except:
+            active = False
+
+        date = UTC.localize(datetime.datetime.strptime(request.POST["date"], "%Y-%m-%d"))
+
+        if active:
+            users = User.objects.filter(is_active = True)
+        else:
+            users = User.objects.all()
+
+        wb = Workbook()
+        ws = wb.active
+        ws.title = "User list"
+
+        userCount = len(users)
+
+        ws.cell(column=1, row=1, value="User name")
+        ws.cell(column=2, row=1, value="First name")
+        ws.cell(column=3, row=1, value="Last name")
+        ws.cell(column=4, row=1, value="E-mail")
+        ws.cell(column=5, row=1, value="Activated")
+        ws.cell(column=6, row=1, value="Date joined")
+
+        counter = 2
+        for user in users:
+            if user.date_joined > date:
+                ws.cell(column=1, row=counter, value=user.username)
+                ws.cell(column=2, row=counter, value=user.first_name)
+                ws.cell(column=3, row=counter, value=user.last_name)
+                ws.cell(column=4, row=counter, value=user.email)
+                ws.cell(column=5, row=counter, value=user.is_active)
+                ws.cell(column=6, row=counter, value=user.date_joined)
+                counter += 1
+
+        response = HttpResponse(save_virtual_workbook(wb), content_type='application/vnd.ms-excel')
+        response['Content-Disposition'] = 'attachment; filename="User_list.xlsx"'
+
+        return response
+
+    if request.method == 'GET':
+        return render_to_response('/download_users.html', {'request': request })
+
+# mass user cration from the uploaded file
+# this function will be refactored and separated into partials
+@csrf_exempt
+def create_mass_accounts(request):
+    
+    # check if the user is authenticated if not redirect user to home
+    external_auth_response = external_auth_login(request)
+    if external_auth_response is not None:
+        return external_auth_response
+    if not request.user.is_staff:
+        return redirect(reverse('home'))
+    
+    # check if there is POST request
+    if request.method == 'POST':
+        
+        form = AccountMassCreationFormUpload(request.POST, request.FILES)
+        max_size = int(2000000)
+        new_file_name = ""
+        messages = []
+        
+        # check if form is valid save the uploaded file to the server
+        if form.is_valid():
+            base_file_name = "users"
+            err_messages = ""
+            
+            # try to save a file to the server and catch the Exceptions if they occurr
+            try:
+                file_storage, new_file_name = store_uploaded_file(request, 'file', ['.xlsx'], base_file_name, max_file_size=max_size)
+                
+            except Exception, error:
+                print str(error)
+                err_messages = "Error " + str(error)
+                
+            else:
+                print "Everything looks great!"
+                
+                # file is saved on the server - process the data
+                filename = '/edx/var/edxapp/uploads/' + new_file_name
+                
+                # messages, downloadable_workbook = mass_user_account_parse_xslsx(filename)
+                elements = mass_user_account_parse_xslsx(filename)
+                #elements = mass_user_check_if_users_exist(elements)
+
+                # return list of names which will be displayed on the page
+                return render_to_response('mass_user/list_users.html', {'elements': elements})
+                
+                
+                # return response to user
+                # file_content_type = 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+                #return render_to_response('mass_user/upload.html', {'form': form, 'request': request, 'uploaded': False, 'messages': messages, 'path': 'test'})
+                # response = HttpResponse(save_virtual_workbook(downloadable_workbook), content_type = file_content_type) 
+                # return response 
+
+            finally:
+                print "Everything passed as it should"
+                #return render_to_response('mass_user/upload.html', {'form': form, 'request': request, 'uploaded': False, 'messages': err_messages, 'path': 'test'})
+         
+            # end try-catch
+    else:          
+        form = AccountMassCreationFormUpload()
+
+        return render_to_response('mass_user/upload.html', {'form': form, 'request': request, 'uploaded': False, 'path': 'test'})
+
+@require_POST
+@login_required
+@ensure_csrf_cookie
+def mass_users_download_list(request):
+    # I need the whole complete list for every user - just usernames/emails
+    #print request
+    data = json.loads(request.POST.get('data'))
+    
+    emailList = data['emailValues']
+    usernameList = data['usernameValues']
+    
+    print usernameList
+    user = ''
+    message = ''
+
+    # Create new xslx file to download
+    downloadable_workbook = Workbook()
+    workbook_sheet = downloadable_workbook.create_sheet()
+    output_row_count = 1
+    counter = 0
+
+    for email in emailList:
+        try:
+            if len(User.objects.filter(email=email)) > 0:
+                user = User.objects.get(email=email)
+                message = "Email address already exists"
+                flag = "true"
+            elif len(User.objects.filter(username=usernameList[counter])) > 0:
+                user = User.objects.get(username=usernameList[counter])
+                message = "Username already exists"
+                flag = "true"
+            else:
+                user = User.objects.get(username=usernameList[counter])
+            print message
+
+        except Exception, e:
+            if set('[~!@#$%^&*() +{}":;\']+$').intersection(usernameList[counter]):
+                message = "Special characters not allowed"
+                flag = "error"
+            else:
+                message = "Creating user"
+                flag = "false"
+            reg = ""
+            print message
+
+        else:
+            regObject = Registration.objects.get(user=user)
+            reg = regObject.activation_key
+
+        finally:
+            pass
+
+        workbook_sheet.cell(row=output_row_count,column=1).value = usernameList[counter]
+        workbook_sheet.cell(row=output_row_count,column=2).value = email
+        workbook_sheet.cell(row=output_row_count,column=3).value = reg
+
+        output_row_count += 1
+        counter += 1
+
+    #file_content_type = 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+    #response = HttpResponse(save_virtual_workbook(downloadable_workbook), content_type = file_content_type)
+    ts = int(time.time())
+    filename = 'massUserCreationList-' + str(ts) + '.xlsx'
+    downloadable_workbook.save('/tmp/'+filename)
+    
+
+    src_file_name = filename
+    src_file_path = '/tmp/'+filename
+    flag = ''
+    uploadedToPath = 'https://s3.amazonaws.com/hmsusercreationdata/'
+
+    AWS_ACCESS_KEY_ID = 'AKIAIQSM7UI3EBM4OL4A'
+    AWS_SECRET_ACCESS_KEY = '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'
+    AWS_BUCKET_NAME = 'hmsusercreationdata'
+
+    try:
+        conn = boto.connect_s3(AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY)
+        bucket = conn.get_bucket(AWS_BUCKET_NAME)
+        k = Key(bucket)
+        # key is the filename under which is saved
+        k.key = src_file_name
+        #key = boto.s3.key.Key(bucket, compressed_file_name)
+        k.set_contents_from_filename(src_file_path)
+        k.set_acl('public-read')
+        print "file uploaded"
+        # need to check if file is uploaded - check what is the response code
+        # after success remove the compressed file
+        os.remove(src_file_path)
+        flag = "true"
+        print "file removed"
+    except Exception, e:
+        print e
+
+    context = {
+        'success': flag,
+        'filename': filename,
+        'uploadedTo': uploadedToPath
+    }
+    #end for
+    return JsonResponse(context)
+
+@require_POST
+@login_required
+@ensure_csrf_cookie
+def mass_users_add_user_ajax(request):
+    username = request.POST.get('username')
+    email = request.POST.get('email')
+    first_name = request.POST.get('first_name')
+    last_name = request.POST.get('last_name')
+
+    password = 'hms-test'
+    flag = ''
+    reg = ''
+
+    form_user = AccountCreationForm(
+        data = {
+            'username': username,
+            'email': email,
+            'password': password,
+            'first_name': first_name,
+            'last_name': last_name,
+            'name': first_name
+        },
+        tos_required = False
+    )
+
+    # try to create an account if not return error
+    try:
+        user, _profile, regObject = _do_create_account(form_user)
+        flag = "true"
+        message = "User created"
+
+    except Exception, error:
+            flag = "false"
+            message = str(error)
+    else:
+        reg = regObject.activation_key
+
+    context = {
+        'message': message,
+        'regKey': reg,
+        'success': flag
+    }
+    return JsonResponse(context)
+
+@require_POST
+@login_required
+@ensure_csrf_cookie
+def mass_user_check_if_users_exist_ajax(request):
+    # check if user exist already
+    username = request.POST.get('data')
+    email = request.POST.get('email')
+    reg = ""
+    user = ""
+    flag = False
+
+    try:
+        if len(User.objects.filter(email=email)) > 0:
+            user = User.objects.get(email=email)
+            message = "Email address already exists"
+            flag = "true"
+        elif len(User.objects.filter(username=username)) > 0:
+            user = User.objects.get(username=username)
+            message = "Username already exists"
+            flag = "true"
+        else:
+            user = User.objects.get(username=username)
+
+    except Exception, e:
+        if set('[~!@#$%^&*() +{}":;\']+$').intersection(username):
+            message = "Special characters not allowed"
+            flag = "error"
+        else:
+            message = "Creating user"
+            flag = "false"
+        reg = ""
+
+    else:
+        regObject = Registration.objects.get(user=user)
+        reg = regObject.activation_key
+
+    finally:
+        pass
+    
+    context = {
+        'message': message,
+        'regKey': reg,
+        'status': flag
+    }
+
+    return JsonResponse(context)
+    #return already_in_system
+
+# create_mass_user_accounts partial 
+def mass_user_account_parse_xslsx(filename):
+    wb2 = load_workbook(filename, use_iterators=True)
+                
+    ws = wb2.worksheets[0]
+    output_row_count = 0
+    print_rows = []
+
+    # Create new xslx file to download
+    downloadable_workbook = Workbook()
+    workbook_sheet = downloadable_workbook.create_sheet()
+    #course_keys = hms_get_all_courses()
+    # collection for all messages
+    messages = []
+    # print output of the data into dict list
+    elements = []
+    array_id = 0
+
+    for row in ws.iter_rows(row_offset=1):
+        # don't parse the first line
+        if not row[0].value == None:
+            message = {}
+
+            username = row[2].value
+            password = 'hms-test'
+            email = row[3].value
+            first_name = row[0].value
+            last_name = row[1].value
+            is_staff = None
+            course_id = None
+            is_active = None
+            flag = ""
+
+            data = {
+                'array_id': array_id,
+                'username': username,
+                'email': email,
+                'password': password,
+                'first_name': first_name,
+                'last_name': last_name,
+                'name': first_name
+            }
+
+            array_id += 1
+            elements.append(data)
+
+    # return messages and filename for download
+    #return messages, downloadable_workbook
+    return elements
+
+
+@login_required
+def announcements(request):
+    """
+    returns: all announcements that are to be displayed to students
+    """
+    try:
+        announcements = Announcements.objects.get(announcement_id=1)
+        tmp = announcements.announcement
+
+        return render_to_response('announcements.html', {'announcements': tmp, 'request': request})
+
+    except Exception, error:
+        print str(error)
+
+
+@login_required
+def save_announcements(request):
+
+    """
+    saves all updated announcements
+    """
+
+    if request.method == "POST" and request.POST:
+
+        try:
+            announcements = Announcements.objects.get(announcement_id=1)
+            announcements.announcement = request.POST["announcements_content"]
+            announcements.save()
+            return render_to_response('announcements.html', {'announcements': announcements.announcement, 'request': request})
+
+        except Exception, error:
+            print str(error)
+
+
+# Get the course list and enroll users
+def hms_get_all_courses():
+       
+    courses = branding.get_visible_courses()
+    courses = sorted(courses, key=lambda course: course.number)
+    
+    course_keys = []
+    for c in courses:
+        key = unicode(c.location.course_key)
+        course_key = {
+            'key': key
+        }
+
+        course_keys.append(course_key)
+        
+    return course_keys
+    # now we have course keys for the enrolment
+    
+# enroll new hms users    
+def hms_user_enroll_all_courses(user, course_keys):
+    for course_key in course_keys:
+        c_id = course_key['key']
+        c_key = CourseLocator.from_string(c_id)
+        try:
+            CourseEnrollment.enroll(user, c_key)
+            messages = "Enrolment Done"
+        except Exception, error:
+            messages = "Error on " + str(c_key) + " " + str(error) 
+            
+    return messages
+            
 @csrf_exempt
 def create_account(request, post_override=None):
     """
     JSON call to create new edX account.
     Used by form in signup_modal.html, which is included into navigation.html
     """
-    warnings.warn("Please use RegistrationView instead.", DeprecationWarning)
-
     try:
         user = create_account_with_params(request, post_override or request.POST)
     except AccountValidationError as exc:
@@ -1974,7 +2538,6 @@ def auto_auth(request):
         user.email = email
         user.set_password(password)
         user.save()
-        profile = UserProfile.objects.get(user=user)
         reg = Registration.objects.get(user=user)
 
     # Set the user's global staff bit
@@ -1989,12 +2552,6 @@ def auto_auth(request):
     # Activate the user
     reg.activate()
     reg.save()
-
-    # ensure parental consent threshold is met
-    year = datetime.date.today().year
-    age_limit = settings.PARENTAL_CONSENT_AGE_LIMIT
-    profile.year_of_birth = (year - age_limit) - 1
-    profile.save()
 
     # Enroll the user in a course
     if course_key is not None:
@@ -2059,21 +2616,149 @@ def auto_auth(request):
     response.set_cookie('csrftoken', csrf(request)['csrf_token'])
     return response
 
+# new activatge_account 
+@ensure_csrf_cookie
+def activate_account_hms(request, key):
+    """When link in activations e-mail is clicked - hms """
+    if len(key) > 32:
+        splitted_params = key.split('?')
+        new_key = splitted_params[0]
+    else:
+        new_key = key
+
+    regs = Registration.objects.filter(activation_key=new_key)
+        
+    # check if key is applied
+    if len(regs) == 1:
+        user_logged_in = ''
+        already_active = True
+        
+        if not regs[0].user.is_active:
+            already_active = False
+        
+        student_name = ''
+        student_name = regs[0].user.first_name
+        if student_name == '':
+            student_name = regs[0].user.username
+        
+        
+        resp = render_to_response(
+           "registration/activation_complete_hms.html",
+            {
+                'student': student_name,
+                'user_logged_in': user_logged_in,
+                'already_active': already_active
+            }                       
+        )
+        
+        return resp
+    
+    if len(regs) == 0:
+        return render_to_response(
+            "registration/activation_invalid.html",
+            {'csrf': csrf(request)['csrf_token']}
+        )
+        
+    return HttpResponse(_("Unknown error. Please e-mail us to let us know how it happened."))
+
+
+@csrf_exempt
+@require_POST
+def change_pass_hms(request):
+    form = request.POST
+    message = ''
+    
+    key = form['activation_key']
+
+    if len(key) > 32:
+        splitted_params = key.split('?')
+        new_key = splitted_params[0]
+    else:
+        new_key = key
+
+    regs = Registration.objects.filter(activation_key=new_key)
+    
+    if form['password1'] != form['password2'] or form['tos'] == 'false':
+        if form['password1'] == '' or form['password2'] == '':
+            message += " Please insert password. "
+        if form['tos'] == 'false':
+            message += " You need to agree with terms and conditions. "
+            
+        return JsonResponse({"message": message, "success": False})
+    
+    if form['password1'] == "" or form['password2'] == "":
+        message = "Please insert password"
+        return JsonResponse({"message": message, "success": False})
+
+    if form['password1'] != form['password2']:
+        message = "Passwords do not match, please enter the same password twice."
+        return JsonResponse({"message": message, "success": False})
+
+    if form['tos'] == 'false':
+        message = "You need to agree with Terms and Conditions"
+        return JsonResponse({"message": message, "success": False})
+
+
+    if (form['password1'] == form['password2']) and form['tos'] == 'true':
+        if len(form['password1']) < 6:
+            message = 'Password must contain at least six characters'
+            return JsonResponse({"message": message, "success": False})
+
+        else:
+            if len(regs) == 1:
+                user_logged_in = request.user.is_authenticated()
+                already_active = True
+                
+                if not regs[0].user.is_active:
+                    regs[0].activate()
+                    already_active = False
+                # Enroll student in any pending courses he/she may have if auto_enroll flag is set
+                student = User.objects.filter(id=regs[0].user_id)
+                
+            student = User.objects.get(id=regs[0].user_id)
+            student.set_password(form['password1'])
+            student.save()
+            message = 'Your password has been changed.'
+            
+            return JsonResponse({"message": message, "success": True})
+
+    else:
+        message = "Something went wrong, please try again."
+        return JsonResponse({"message": message, "success": False})
+
 
 @ensure_csrf_cookie
 def activate_account(request, key):
     """When link in activation e-mail is clicked"""
     regs = Registration.objects.filter(activation_key=key)
+    # ukoliko postoji kljuc
+    
     if len(regs) == 1:
-        user_logged_in = request.user.is_authenticated()
+        # ok korisnik ima key u url - sada treba prikazat formu
+        # ova linija je za registriranje korisnika
+        # user_logged_in = request.user.is_authenticated()
+        
+        user_logged_in = ''
         already_active = True
+        
         if not regs[0].user.is_active:
-            regs[0].activate()
+            #regs[0].activate()
             already_active = False
 
         # Enroll student in any pending courses he/she may have if auto_enroll flag is set
         _enroll_user_in_pending_courses(regs[0].user)
 
+        # new resp - hms activation
+        resp = render_to_response(
+            "registration/activation_complete_hms.html",
+            {
+                'user_logged_in': user_logged_in,
+                'already_active': already_active,
+                'user': user
+            }
+        )
+        # old resp - normal activation
+        """
         resp = render_to_response(
             "registration/activation_complete.html",
             {
@@ -2081,6 +2766,7 @@ def activate_account(request, key):
                 'already_active': already_active
             }
         )
+        """
         return resp
     if len(regs) == 0:
         return render_to_response(
@@ -2088,7 +2774,6 @@ def activate_account(request, key):
             {'csrf': csrf(request)['csrf_token']}
         )
     return HttpResponseServerError(_("Unknown error. Please e-mail us to let us know how it happened."))
-
 
 @csrf_exempt
 @require_POST
@@ -2106,18 +2791,6 @@ def password_reset(request):
                   from_email=configuration_helpers.get_value('email_from_address', settings.DEFAULT_FROM_EMAIL),
                   request=request,
                   domain_override=request.get_host())
-        # When password change is complete, a "edx.user.settings.changed" event will be emitted.
-        # But because changing the password is multi-step, we also emit an event here so that we can
-        # track where the request was initiated.
-        tracker.emit(
-            SETTING_CHANGE_INITIATED,
-            {
-                "setting": "password",
-                "old": None,
-                "new": None,
-                "user_id": request.user.id,
-            }
-        )
     else:
         # bad user? tick the rate limiter counter
         AUDIT_LOG.info("Bad password_reset user passed in.")
@@ -2302,10 +2975,39 @@ def reactivation_email_for_user(user):
     return JsonResponse({"success": True})
 
 
-def validate_new_email(user, new_email):
+# TODO: delete this method and redirect unit tests to do_email_change_request after accounts page work is done.
+@ensure_csrf_cookie
+def change_email_request(request):
+    """ AJAX call from the profile page. User wants a new e-mail.
     """
-    Given a new email for a user, does some basic verification of the new address If any issues are encountered
-    with verification a ValueError will be thrown.
+    ## Make sure it checks for existing e-mail conflicts
+    if not request.user.is_authenticated():
+        raise Http404
+
+    user = request.user
+
+    if not user.check_password(request.POST['password']):
+        return JsonResponse({
+            "success": False,
+            "error": _('Invalid password'),
+        })  # TODO: this should be status code 400  # pylint: disable=fixme
+
+    new_email = request.POST['new_email']
+    try:
+        do_email_change_request(request.user, new_email)
+    except ValueError as err:
+        return JsonResponse({
+            "success": False,
+            "error": err.message,
+        })
+    return JsonResponse({"success": True})
+
+
+def do_email_change_request(user, new_email, activation_key=uuid.uuid4().hex):
+    """
+    Given a new email for a user, does some basic verification of the new address and sends an activation message
+    to the new address. If any issues are encountered with verification or sending the message, a ValueError will
+    be thrown.
     """
     try:
         validate_email(new_email)
@@ -2318,23 +3020,12 @@ def validate_new_email(user, new_email):
     if User.objects.filter(email=new_email).count() != 0:
         raise ValueError(_('An account with this e-mail already exists.'))
 
-
-def do_email_change_request(user, new_email, activation_key=None):
-    """
-    Given a new email for a user, does some basic verification of the new address and sends an activation message
-    to the new address. If any issues are encountered with verification or sending the message, a ValueError will
-    be thrown.
-    """
     pec_list = PendingEmailChange.objects.filter(user=user)
     if len(pec_list) == 0:
         pec = PendingEmailChange()
         pec.user = user
     else:
         pec = pec_list[0]
-
-    # if activation_key is not passing as an argument, generate a random key
-    if not activation_key:
-        activation_key = uuid.uuid4().hex
 
     pec.new_email = new_email
     pec.activation_key = activation_key
@@ -2360,19 +3051,6 @@ def do_email_change_request(user, new_email, activation_key=None):
     except Exception:  # pylint: disable=broad-except
         log.error(u'Unable to send email activation link to user from "%s"', from_address, exc_info=True)
         raise ValueError(_('Unable to send email activation link. Please try again later.'))
-
-    # When the email address change is complete, a "edx.user.settings.changed" event will be emitted.
-    # But because changing the email address is multi-step, we also emit an event here so that we can
-    # track where the request was initiated.
-    tracker.emit(
-        SETTING_CHANGE_INITIATED,
-        {
-            "setting": "email",
-            "old": context['old_email'],
-            "new": context['new_email'],
-            "user_id": user.id,
-        }
-    )
 
 
 @ensure_csrf_cookie

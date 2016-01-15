@@ -50,6 +50,7 @@
 // +Base - Specific Views
 // ====================
 @import 'views/account';
+@import 'views/announcements';
 @import 'views/assets';
 @import 'views/updates';
 @import 'views/dashboard';
@@ -87,3 +88,6 @@
 // +CodeMirror Overrides
 // ====================
 @import 'elements/codemirror-overrides';
+// +Base - upload mass accounts forms
+@import 'views/mass-upload-users.scss';
+@import 'views/mass-create-users.scss';

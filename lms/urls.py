@@ -46,7 +46,9 @@ urlpatterns = (
 
     url(r'^logout$', LogoutView.as_view(), name='logout'),
     url(r'^create_account$', 'student.views.create_account', name='create_account'),
-    url(r'^activate/(?P<key>[^/]*)$', 'student.views.activate_account', name="activate"),
+   # url(r'^activate/(?P<key>[^/]*)$', 'student.views.activate_account', name="activate"),
+    url(r'^activate/(?P<key>[^/]*)$', 'student.views.activate_account_hms', name="activate"),
+    url(r'^activate/pass_change/$', 'student.views.change_pass_hms', name="change_password"),
 
     url(r'^password_reset/$', 'student.views.password_reset', name='password_reset'),
     ## Obsolete Django views for password resets
@@ -74,7 +76,7 @@ urlpatterns = (
     url(r'^i18n/', include('django.conf.urls.i18n')),
 
     # Feedback Form endpoint
-    url(r'^submit_feedback$', 'util.views.submit_feedback'),
+    url(r'^submit_feedback$', 'util.views.submit_feedback_to_email'),
 
     # Enrollment API RESTful endpoints
     url(r'^api/enrollment/v1/', include('enrollment.urls')),

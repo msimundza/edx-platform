@@ -99,6 +99,7 @@ $course-search-input-height: ($button-size);
       }
 
       .course-search {
+        display: none;
         padding: ($baseline) 0;
 
         .search-input {

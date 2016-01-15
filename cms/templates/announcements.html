@@ -1,0 +1,53 @@
+<%! from django.utils.translation import ugettext as _ %>
+<%inherit file="base.html" />
+
+<%block name="content">
+
+	<div class="wrapper-mast wrapper sr">
+	  <header class="mast">
+	    <h1 class="page-header">
+	      ${_("{studio_name} Manage announcements").format(studio_name=settings.STUDIO_SHORT_NAME)}
+	    </h1>
+	  </header>
+	</div>
+
+	<div class="wrapper-content wrapper announcements">
+		<section class="content activation is-active">
+
+		    <div class="notice notice-incontext notice-instruction has-actions announcements_wrapper ">
+
+		    	<div class="edit_announcement">
+		    		<div class="edit_announcement_wrapper">
+				    	<h2 class="title">${_("Edit announcements")}</h2>
+
+				    	<form id="hms-announcement-submit" method="post" action="/save_announcements/">
+						
+						    <div class="add_announcement_wrapper">
+						     	<input type="hidden" name="csrfmiddlewaretoken" value="${csrf_token}">
+						        <textarea id="add_announcement" name="announcements_content">${announcements}</textarea>
+						    </div>
+						    <div>
+						        <button class="save-announcement">Save</button>
+						    </div>
+						</form>
+					</div>
+				</div>
+		    </div>
+		</section>
+	</div>
+	
+	<script src="//tinymce.cachefly.net/4.2/tinymce.min.js"></script>
+
+	<script type="text/javascript">
+		tinymce.init({
+		    selector: "textarea",
+		    plugins: [
+		        "advlist autolink lists link image charmap print preview anchor",
+		        "searchreplace visualblocks code fullscreen",
+		        "insertdatetime media table contextmenu paste"
+		    ],
+		    toolbar: "insertfile undo redo | styleselect | bold italic | alignleft aligncenter alignright alignjustify | bullist numlist outdent indent | link image"
+		});
+	</script>
+</%block>
+

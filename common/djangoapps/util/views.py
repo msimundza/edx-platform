@@ -21,6 +21,17 @@ import track.views
 
 from opaque_keys import InvalidKeyError
 from opaque_keys.edx.keys import CourseKey
+import os
+import smtplib
+
+from email.mime.multipart import MIMEMultipart
+from email.MIMEImage import MIMEImage
+from email.mime.text import MIMEText
+
+import StringIO
+from email.mime.image import MIMEImage
+
+from django.views.decorators.csrf import csrf_exempt
 
 from student.roles import GlobalStaff
 
@@ -288,6 +299,82 @@ def _record_feedback_in_datadog(tags):
     datadog_tags = [u"{k}:{v}".format(k=k, v=v) for k, v in tags.items()]
     dog_stats_api.increment(DATADOG_FEEDBACK_METRIC, tags=datadog_tags)
 
+@csrf_exempt
+def submit_feedback_to_email(request):
+
+    try:
+        file = request.FILES["screenshoot"]
+    except:
+        file = None
+
+    def build_error_response(status_code, field, err_msg):
+        return HttpResponse(json.dumps({"field": field, "error": err_msg}), status=status_code)
+
+    additional_info = {}
+
+    required_fields = ["subject", "details"]
+    required_field_errs = {
+        "subject": "Please provide a subject.",
+        "details": "Please provide details.",
+    }
+
+    for field in required_fields:
+        if field not in request.POST or not request.POST[field]:
+            return build_error_response(400, field, required_field_errs[field])
+
+    subject = request.POST["subject"]
+    details = request.POST["details"]
+    type = request.POST["issue_type"]
+
+    try:
+        course_id = request.POST["course_id"]
+    except:
+        course_id = "Dashboard"
+
+    msg = MIMEMultipart('alternative')
+    recipients = ["danko@extensionengine.com", "alexis_estrella@hms.harvard.edu", "support@hmx.zendesk.com"]
+    msg['Subject'] = "Help desk form received"
+    msg['From'] = "HMS Support <hms-support@extensionengine.com>"
+
+    html = "<strong>Issue type: </strong>" + type + "<br>" \
+           + "<strong>User: </strong>" + request.user.email + "<br>" \
+           + "<strong>Sent from: </strong>" + course_id + "<br>" \
+           + "<strong>Subject: </strong>" + subject + "<br>" \
+           + "<strong>Details: </strong>" + details
+
+    part = MIMEText(html, 'html')
+
+    username = 'hms-support@extensionengine.com'
+    password = 'Suou3jhJFGZZM8afgHw15g'
+
+    msg.attach(part)
+
+    if file:
+        if file.size > 2500000:
+            return build_error_response(400, "Attachment", "Max upload size is 2.5 MB")
+        try:
+            image = MIMEImage(file.read())
+            image.add_header('Content-Disposition', 'attachment; filename="screenshot"')
+            msg.attach(image)
+        except:
+            return build_error_response(400, "Attachment", "File type not allowed!")
+                    
+    s = smtplib.SMTP('smtp.mandrillapp.com', 587)
+
+    s.login(username, password)
+    s.sendmail(msg['From'], recipients, msg.as_string())
+
+    for header, pretty in [
+        ("HTTP_REFERER", "Page"),
+        ("HTTP_USER_AGENT", "Browser"),
+        ("REMOTE_ADDR", "Client IP"),
+        ("SERVER_NAME", "Host")
+    ]:
+        additional_info[pretty] = request.META.get(header)
+
+    s.quit()
+
+    return HttpResponse(status=200)
 
 def submit_feedback(request):
     """

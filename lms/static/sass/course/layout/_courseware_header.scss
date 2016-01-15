@@ -9,7 +9,8 @@
   width: 100%;
 
   .course-material{
-    @extend %inner-wrapper;
+    margin-top: 10px;
+    @extend %inner-wrapper; 
   }
 
   .course-tabs {
@@ -32,30 +33,27 @@
         @include border-left(1px solid $gray-d3);
       }
 
-      a,
-      a:visited {
-        @include padding(($baseline/2), ($baseline*0.75), 13px, ($baseline*0.75));
-        @extend %t-title7;
-        @extend %t-regular;
-        color: $gray-d1;
+      a {
+        font-family: AvenirLTStd-Book;
+        text-transform: uppercase;
+        border-radius: 3px;
+        color: $mortar;
         display: block;
         text-align: center;
+        padding: ($baseline/2) 13px 12px;
+        font-size: 16px;
+        font-weight: normal;
         text-decoration: none;
 
-        &:hover,
-        &:focus {
-          color: $uxpl-blue-hover-active;
-          border-bottom: 4px solid $uxpl-blue-hover-active;
+        &:hover, &:focus {
+          color: #333;
+          background: $gray-nav-active;
         }
 
         &.active {
-          border-bottom: 4px solid $uxpl-blue-base;
-          color: $uxpl-blue-base;
-
-          &:hover,
-          &:focus {
-            color: $uxpl-blue-base;
-          }
+          color: $crimson;
+          font-weight: bold;
+          background-color: $gray-nav-active;
         }
       }
     }

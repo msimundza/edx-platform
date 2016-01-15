@@ -108,6 +108,10 @@ _EMAIL_INVALID_MSG = _("A properly formatted e-mail is required")
 _PASSWORD_INVALID_MSG = _("A valid password is required")
 _NAME_TOO_SHORT_MSG = _("Your legal name must be a minimum of two characters long")
 
+# form upload for mass user upload via client
+class AccountMassCreationFormUpload(forms.Form):
+    #title = forms.CharField(max_length=50)
+    file  = forms.FileField()
 
 class AccountCreationForm(forms.Form):
     """
@@ -145,6 +149,24 @@ class AccountCreationForm(forms.Form):
         error_messages={
             "required": _NAME_TOO_SHORT_MSG,
             "min_length": _NAME_TOO_SHORT_MSG,
+        }
+    )
+    first_name = forms.CharField(
+        min_length=2,
+        max_length=30,
+        error_messages={
+            "required": _NAME_TOO_SHORT_MSG,
+            "min_length": _NAME_TOO_SHORT_MSG,
+            "max_length": _("First name too long"),
+        }
+    )
+    last_name = forms.CharField(
+        min_length=2,
+        max_length=30,
+        error_messages={
+            "required": _NAME_TOO_SHORT_MSG,
+            "min_length": _NAME_TOO_SHORT_MSG,
+            "max_length": _("Last name too long"),
         }
     )
 

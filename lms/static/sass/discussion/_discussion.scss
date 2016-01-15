@@ -4,6 +4,25 @@
 
 body.discussion {
 
+  .course-tabs .right {
+    @include float(right);
+
+    clear: both;
+    margin-right: -4px;
+
+    .new-post-btn {
+      @include blue-button;
+      @include margin-right(4px);
+    }
+
+    .new-post-icon {
+      @include margin-right(7px);
+      font-size: 16px;
+      vertical-align: middle;
+      color: $white;
+    }
+  }
+
   .edit-post-form {
     @include clearfix();
     box-sizing: border-box;

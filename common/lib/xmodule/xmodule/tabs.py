@@ -331,6 +331,12 @@ class CourseTabList(List):
         ])
 
     @staticmethod
+    def get_help(course):
+        for tab in course.tabs:
+            if isinstance(tab, StaticTab):
+                return tab
+
+    @staticmethod
     def get_discussion(course):
         """
         Returns the discussion tab for the given course.  It can be either of type 'discussion'

@@ -1,0 +1,94 @@
+<%! from django.utils.translation import ugettext as _ %>
+<%inherit file="../base_mass.html" />
+
+<%block name="content">
+<div class="wrapper-mast wrapper sr">
+  <header class="mast">
+    <h1 class="page-header">
+      ${_("{studio_name} Mass Account Import").format(studio_name=settings.STUDIO_SHORT_NAME)}
+    </h1>
+  </header>
+</div>
+
+<div id="list-users-create" class="wrapper-content wrapper">
+  <section class="content activation is-active">
+    <article class="content-primary" role="main">
+    </article>
+
+    <div class="notice notice-incontext notice-instruction has-actions hmsupload">
+      <div class="msg">
+        <h2 class="title">${_("Upload users from file")}</h2>
+        <div class="copy btn-copy">
+          <a href="/create_mass_accounts" class="button new-button new-acc-button"><i class="icon fa fa-plus icon-inline"></i>
+              ${_("Return to upload")}</a>
+        </div>
+        <div class="copy">
+          <p>${_("Please click on 'Check & Insert Users' to start process.")}</p>
+          <a id="input-users" class="list-btn">${_("Check & Insert Users")}</a>
+        </div>
+
+        <div class="status copy">
+          <p>${_("Status: ")}<span id="status-message">Waiting</span></p>
+          <p>${_("Number of users on list: ")}<span id="nbr-of-users">${len(elements)}</span></p>
+          <p>${_("Processed users: ")}<span id="proc-users">0</span><span class="part">  / ${len(elements)}<span></p>
+          <p>${_("Number errors while processing: ")}<span id="error-users">0</span></p>
+        </div>
+
+        <div class="download-list hidden copy">
+          <p>${_("Now you can upload xslx list to s3, and than we will provide link to download that file")} </p>
+          <a id="download-users" class="list-btn">${_("Upload XSLX file to s3")}</a>
+        </div>
+
+
+        <div class="list-users">
+          <p class="list-title">${_("users list")} </p>
+          <table>
+            <thead>
+            <tr>
+              <th class="hname">First Name</th>
+              <th class="hname">Last Name</th>
+              <th class="husername">Username</th>
+              <th class="hmail">Email</th>
+              <th class="hreg">Registration process</th>
+              <th class="hkey">Registering Done / Key</th>
+            </tr>
+            </thead>
+            <tbody>
+            %for item in elements:
+            <tr>
+              <td id="fname-${item['array_id']}" class="name" data-firstname="${item['first_name']}">
+                <p>${item['first_name']}</p>
+              </td>
+
+              <td id="lname-${item['array_id']}" class="name" data-lastname="${item['last_name']}">
+                <p>${item['last_name']}</p>
+              </td>
+
+              <td id="user-${item['array_id']}" class="username" data-username="${item['username']}">
+                <p>${item['username']}</p>
+              </td>
+
+              <td id="email-${item['array_id']}" class="email" data-email="${item['email']}">
+              <p>${item['email']}</p>
+              </td>
+
+              <td id="reg-${item['array_id']}" class="registered">
+                <p> ... </p>
+              </td>
+
+              <td id="reg-done-${item['array_id']}" class="key">
+                <p> ... </p>
+              </td>
+            </tr>
+            %endfor
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+    </div>
+  </section>
+</div>
+<script type="text/javascript" src="${settings.STATIC_URL}/js/mass_create_user/list_create_users.js">
+</script>
+</%block>

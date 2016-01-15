@@ -8,6 +8,65 @@
     .sr, .sr-only {
         color: $black;
         background: $white;
+        a {
+          border-radius: 0;
+          box-shadow: none;
+          @include padding-left(19px);
+          color: $link-color;
+        }
+
+        &.ui-state-active {
+          @extend .active;
+          border-bottom: none;
+
+          &:hover, &:focus {
+            background: none;
+          }
+        }
+
+        span.ui-icon {
+          @include left(0);
+          opacity: 0.3;
+          background-image: url("/static/images/ui-icons_222222_256x240.png");  // jQuery UI sprite
+
+          &.ui-icon-triangle-1-s {
+            background-position: -64px -14px;
+          }
+
+          &.ui-icon-triangle-1-e {
+
+            // CASE: left to right layout
+            @include ltr {
+              background-position: -32px -15px; // jQuery UI east arrow position
+            }
+
+           // CASE: right to left layout
+           @include rtl {
+              background-position: -96px -15px; // jQuery UI west arrow position
+            }
+          }
+        }
+      }
+    }
+
+    .chapter {
+      width: 100% !important;
+      @include box-sizing(border-box);
+      padding: 11px 14px;
+      @include transition(background-color .1s linear 0s);
+
+      &:first-child {
+        border-radius: 3px 0 0 0;
+      }
+
+      &:last-child {
+        border-radius: 0 0 0 3px;
+        box-shadow: 0 1px 0 $white inset;
+      }
+
+      &:hover, &:focus {
+        background-color: $white;
+      }
     }
 
     // reseting bolded fonts for the course index
@@ -172,4 +231,3 @@
             }
         }
     }
-}

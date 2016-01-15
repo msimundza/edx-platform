@@ -46,7 +46,7 @@ from lms.djangoapps.lms_xblock.mixin import LmsBlockMixin
 
 ################################### FEATURES ###################################
 # The display name of the platform to be used in templates/emails/etc.
-PLATFORM_NAME = "Your Platform Name Here"
+PLATFORM_NAME = "Harvard Medical School"
 CC_MERCHANT_NAME = PLATFORM_NAME
 # Shows up in the platform footer, eg "(c) COPYRIGHT_YEAR"
 COPYRIGHT_YEAR = "2016"
@@ -126,7 +126,7 @@ FEATURES = {
     'ENABLE_CORS_HEADERS': False,
 
     # Can be turned off if course lists need to be hidden. Effects views and templates.
-    'COURSES_ARE_BROWSABLE': True,
+    'COURSES_ARE_BROWSABLE': False,
 
     # Enables ability to restrict enrollment in specific courses by the user account login method
     'RESTRICT_ENROLL_BY_REG_METHOD': False,
@@ -145,7 +145,7 @@ FEATURES = {
     'ENABLE_STUDENT_HISTORY_VIEW': True,
 
     # Provide a UI to allow users to submit feedback from the LMS (left-hand help modal)
-    'ENABLE_FEEDBACK_SUBMISSION': False,
+    'ENABLE_FEEDBACK_SUBMISSION': True,
 
     # Turn on a page that lets staff enter Python code to be run in the
     # sandbox, for testing whether it's enabled properly.

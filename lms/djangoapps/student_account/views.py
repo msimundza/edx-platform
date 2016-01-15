@@ -68,8 +68,12 @@ def login_and_registration_form(request, initial_mode="login"):
 
     # If we're already logged in, redirect to the dashboard
     if request.user.is_authenticated():
-        return redirect(redirect_to)
-
+        return redirect(reverse('dashboard'))
+    
+    # We don't want form register - redirect it
+    if initial_mode == "register":
+        return redirect(reverse('dashboard'))
+    
     # Retrieve the form descriptions from the user API
     form_descriptions = _get_form_descriptions(request)
 

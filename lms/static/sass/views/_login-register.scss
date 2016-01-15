@@ -124,6 +124,7 @@
 
     .form-type,
     .toggle-form {
+        //display: none;
         @include box-sizing(border-box);
         max-width: 650px;
         min-width: 250px;
@@ -364,10 +365,10 @@
         text-transform: none;
         font-weight: 600;
         letter-spacing: normal;
-
         .icon {
             @extend %sso-icon;
         }
+        padding: 7px 20px; 
     }
 
     .login-provider {

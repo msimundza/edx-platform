@@ -1,0 +1,53 @@
+<%! from django.utils.translation import ugettext as _ %>
+<%inherit file="base_mass.html" />
+
+<%block name="content">
+<div class="wrapper-mast wrapper sr">
+  <header class="mast">
+    <h1 class="page-header">
+      ${_("{studio_name} Download user list").format(studio_name=settings.STUDIO_SHORT_NAME)}
+    </h1>
+  </header>
+</div>
+
+<div id="upload-users-file" class="wrapper-content wrapper">
+  <section class="content activation is-active">
+    <article class="content-primary" role="main">
+    </article>
+
+    <div class="notice notice-incontext notice-instruction has-actions hmsupload">
+      <div class="msg">
+        <h2 class="title">${_("Download user XLSX list")}</h2>
+        <div class="up-message copy">
+          <h3>${_("Select options: ")}</h3>
+        </div>
+        <div class="upload-form-hms">
+        %if request.user.is_authenticated:
+            <form id="xlsx_form" enctype="multipart/form-data" method="post" action="/download_user_list">
+              <label>Select date:</label>
+               <input id="date" type="text" name="date" class="datepicker" placeholder="YYYY-MM-DD" required> <br>
+               <label>Only activated students?</label>
+               <input id="active" type="checkbox" name="active"> <br>
+                <span class="btn btn-default btn-file">
+                    <input id="go" type="submit" value="Download"/>
+                </span>
+            </form>
+        %else:
+            <p>You must be logged to download files</p>
+        %endif
+        </div>
+      </div>
+
+    </div>
+  </section>
+</div>
+<script>
+  $(function() {
+    $(".datepicker").datepicker({ 
+      dateFormat: 'yy-mm-dd',
+      constrainInput: true,
+      maxDate: new Date
+      });
+  });
+  </script>
+</%block>

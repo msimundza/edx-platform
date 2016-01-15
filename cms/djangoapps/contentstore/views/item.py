@@ -456,7 +456,6 @@ def _save_xblock(user, xblock, data=None, children_strings=None, metadata=None, 
 
         old_metadata = own_metadata(xblock)
         old_content = xblock.get_explicitly_set_fields_by_scope(Scope.content)
-
         if data:
             # TODO Allow any scope.content fields not just "data" (exactly like the get below this)
             xblock.data = data
@@ -523,7 +522,6 @@ def _save_xblock(user, xblock, data=None, children_strings=None, metadata=None, 
             if metadata is not None:
                 for metadata_key, value in metadata.items():
                     field = xblock.fields[metadata_key]
-
                     if value is None:
                         field.delete_from(xblock)
                     else:
@@ -956,7 +954,6 @@ def create_xblock_info(xblock, data=None, metadata=None, include_ancestor_info=F
             # Translators: This is the percent sign. It will be used to represent
             # a percent value out of 100, e.g. "58%" means "58/100".
             pct_sign=_('%'))
-
     xblock_info = {
         "id": unicode(xblock.location),
         "display_name": xblock.display_name_with_default,
@@ -980,6 +977,7 @@ def create_xblock_info(xblock, data=None, metadata=None, include_ancestor_info=F
         "explanatory_message": explanatory_message,
         "group_access": xblock.group_access,
         "user_partitions": get_user_partition_info(xblock, course=course),
+        "icon": xblock.icon,
     }
 
     if xblock.category == 'sequential':

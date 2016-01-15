@@ -27,7 +27,7 @@ log = logging.getLogger(__name__)
 
 # HACK: This shouldn't be hard-coded to two types
 # OBSOLETE: This obsoletes 'type'
-class_priority = ['video', 'problem']
+class_priority = ['interactive', 'wistia', 'video', 'problem']
 
 # Make '_' a no-op so we can scrape strings. Using lambda instead of
 #  `django.utils.translation.ugettext_noop` because Django cannot be imported in this file
@@ -36,7 +36,12 @@ _ = lambda text: text
 
 class SequenceFields(object):
     has_children = True
-
+    visited = Boolean(
+        display_name=_("Is Visited"),
+        help=_("Returns if user has visited the sequence."),
+        scope=Scope.user_state
+    )
+      
     # NOTE: Position is 1-indexed.  This is silly, but there are now student
     # positions saved on prod, so it's not easy to fix.
     position = Integer(help="Last tab viewed in this sequence", scope=Scope.user_state)
@@ -183,6 +188,14 @@ class SequenceModule(SequenceFields, ProctoringFields, XModule):
                 self.position = int(position)
             else:
                 self.position = 1
+
+            children = self.get_display_items()
+            child = children[(self.position - 1)]
+
+            if child.visited != True:
+                child.visited = True
+                child.save()    
+
             return json.dumps({'success': True})
 
         raise NotFoundError('Unexpected dispatch type')

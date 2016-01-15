@@ -18,7 +18,8 @@ LIBRARY_KEY_PATTERN = r'(?P<library_key_string>library-v1:[^/+]+\+[^/+]+)'
 
 urlpatterns = patterns(
     '',
-
+    url(r'^announcements/', 'student.views.announcements', name='announcements'),
+    url(r'^save_announcements/', 'student.views.save_announcements', name='save_announcements'),
     url(r'^transcripts/upload$', 'contentstore.views.upload_transcripts', name='upload_transcripts'),
     url(r'^transcripts/download$', 'contentstore.views.download_transcripts', name='download_transcripts'),
     url(r'^transcripts/check$', 'contentstore.views.check_transcripts', name='check_transcripts'),
@@ -66,11 +67,26 @@ urlpatterns += patterns(
 
     url(r'^create_account$', 'student.views.create_account', name='create_account'),
     url(r'^activate/(?P<key>[^/]*)$', 'student.views.activate_account', name='activate'),
+    
+    # mass user creating from the uploaded file
+    url(r'^create_mass_accounts/$', 'student.views.create_mass_accounts', name='create_mass_accounts'),
+    url(r'^create_mass_accounts/mass_user_check_if_users_exist_ajax$', 'student.views.mass_user_check_if_users_exist_ajax',
+        name="mass_user_check_if_users_exist_ajax"),
+    url(r'^create_mass_accounts/mass_users_add_user_ajax$', 'student.views.mass_users_add_user_ajax',
+        name="mass_users_add_user_ajax"),
+    url(r'^create_mass_accounts/mass_users_download_list$', 'student.views.mass_users_download_list',
+        name="mass_users_download_list"),
+
+    # download list of users
+
+    url(r'^download_user_list$', 'student.views.download_user_list', name='download_user_list'),
 
     # ajax view that actually does the work
     url(r'^login_post$', 'student.views.login_user', name='login_post'),
     url(r'^logout$', LogoutView.as_view(), name='logout'),
 )
+
+
 
 # restful api
 urlpatterns += patterns(

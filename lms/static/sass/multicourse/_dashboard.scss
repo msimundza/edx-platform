@@ -8,10 +8,131 @@
 // * +Misc - Uncategorized
 // * +Dashboard - Banner
 
+.view-dashboard {
+  .wrapper-course-material-dashboard {
+    @include clearfix();
+    @include box-sizing(border-box);
+    z-index: 9999;
+    border-bottom: none;
+    margin: 0 auto 0;
+    padding: 0;
+    width: 100%;
+
+    .course-material{
+      margin-top: 10px;
+    }
+
+    ol.course-tabs {
+      padding-bottom: 0px !important;
+      padding-top: 0px !important;
+      @include border-top-radius(4px);
+      @include clearfix();
+      @include margin-left(10px);
+
+      li {
+        @include float(left);
+        list-style: none;
+        margin-right: 20px;
+
+        &.prominent {
+          margin-right: 16px;
+          background: rgba(255, 255, 255, .5);
+          border-radius: 3px;
+        }
+
+        &.prominent + li {
+            padding-left: ($baseline*0.75);
+            border-left: 1px solid #333;
+        }
+
+        a {
+          font-family: AvenirLTStd-Book;
+          text-transform: uppercase;
+          border-radius: 3px;
+          color: $mortar;
+          display: block;
+          text-align: center;
+          padding: ($baseline/2) 13px 12px;
+          font-size: 16px;
+          font-weight: normal;
+          text-decoration: none;
+
+          &:hover, &:focus {
+            color: #333;
+            background: $gray-nav-active;
+          }
+
+          &.active {
+            color: $crimson;
+            font-weight: bold;
+            background-color: $gray-nav-active;
+          }
+        }
+      }
+    }
+  }
+}
+
+
 
 // +Dashboard - Sidebar
 // ====================
 .dashboard {
+  margin-top: 0px !important;
+  padding: 0px !important;
+
+  .dashboard-content-wrapper{
+    width: 97% !important;
+    margin-top: -30px;  
+    padding: 0px !important;
+    border: none !important;
+
+    .dashboard-content{
+      padding: 0px;
+      section{
+        section{
+          header{
+            h2{
+              color: $mortar;
+              font-size: 25px !important;
+              font-weight: normal !important;
+            }
+          }
+        }
+      }
+    }
+
+    .info--username{
+      color: $crimson;
+      font-size: 30px;
+      border-bottom: 2px solid #bdb6b2;
+      span{
+        margin-left: 20px;
+      }
+    }
+
+    .announcements-dashboard{
+      padding-right: 0px;
+      padding-left: 20px;
+    }
+
+    .announcements-dashboard-wrapper{
+      min-height: 330px;
+      .announcements-title{
+        display: block;
+        margin-bottom: 20px;
+        font-weight: bold;
+        font-size: 15px;
+      }
+      min-height: 332px;
+      margin-top: 47px;
+      background-color: #D8D4D2;
+      padding: 20px;
+      color: $ink;
+      overflow: auto;
+      font-size: 14px;
+    }
+  }
   @include clearfix();
   padding: ($baseline*2) 0 $baseline 0;
 
@@ -274,6 +395,8 @@
       @extend %ui-no-list;
 
       .course-item {
+        width: 99%;
+        margin-left: 2px !important;
         margin-bottom: $baseline;
         border-bottom: 4px solid $border-color-l4;
         padding-bottom: $baseline;
@@ -303,14 +426,22 @@
 
   // UI: individual course item
   .course {
+    &:hover{
+      outline: none !important;
+      border: none !important;
+    }
     @include box-sizing(box);
     @include transition(all 0.15s linear 0s);
     @include clearfix();
     @extend %ui-depth2;
-    margin: ($baseline/2);
+    margin: 0;
 
     .details {
       @include clearfix();
+
+      .dashboard-course-info{
+        height: 230px;
+      }
 
       .wrapper-course-image {
         @include float(left);
@@ -366,6 +497,12 @@
       }
 
       .wrapper-course-details {
+        .info-actions-wrapper{
+          width: 90%;
+          position: absolute;
+          bottom: 20px;
+        }
+        height: 100%;
         display: block;
         @include float(left);
         width: flex-grid(9);
@@ -373,8 +510,16 @@
       }
 
       .course-title {
+        margin-left: -20px;
+        margin-top: 20px;
+        line-height: 1.1 !important;
 
         a, span {
+          line-height: 1.1 !important;
+          text-transform: uppercase;
+          color: $ink;
+          font-family: AvenirLTStd-Book;
+          font-size: 25px !important;
           @extend %t-title3;
           @extend %t-light;
           display: inline-block;
@@ -387,6 +532,8 @@
       }
 
       .course-info {
+        margin-top: 22px;
+        margin-left: -20px;
         display: block;
         @include float(left);
         width: flex-grid(4);
@@ -401,8 +548,10 @@
 
         .info-date-block {
           @extend %t-title7;
-          color: $gray; // WCAG 2.0 AA compliant
+          color: $ink;
+          font-size: 17px;
           display: block;
+          margin-top: 10px;
         }
       }
 
@@ -411,7 +560,7 @@
         @include float(right);
         width: flex-grid(8);
         padding: 0;
-        margin-top: ($baseline/2);
+        margin-top: $baseline;
       }
 
       .course-actions {
@@ -451,7 +600,7 @@
 
         // UI: general actions dropdown layout
         .wrapper-action-more {
-          display: inline-block;
+          display: none;
           position: relative;
           @include float(right);
 
@@ -575,6 +724,13 @@
 
       .enter-course {
         @extend %btn-pl-white-base;
+        display: inline-block;
+        font-weight: bold;
+        background-color: $crimson;
+        padding: 12px 22px;
+        color: #fff;
+        text-shadow: 0 1px 0 #003954;
+        @include box-sizing(border-box);
         @include float(right);
 
         &.archived {

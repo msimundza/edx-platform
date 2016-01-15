@@ -68,8 +68,86 @@ $gray-d3:   shade($gray,60%) !default;
 $gray-d4:   shade($gray,80%) !default;
 
 $yellow: rgb(255, 252, 221);
+// ====================
 
-$pink: rgb(182,37,103);
+// LAYOUT: grid
+$gw-column: 80px;
+$gw-gutter: 20px;
+$fg-column: $gw-column;
+$fg-gutter: $gw-gutter;
+$fg-max-columns: 12;
+$fg-max-width: 1400px;
+$fg-min-width: 810px;
+
+// ====================
+
+// FONTS
+$sans-serif: 'AvenirLTStd-Book', $verdana, sans-serif;
+$monospace: Monaco, 'Bitstream Vera Sans Mono', 'Lucida Console', monospace;
+$body-font-family: $sans-serif;
+$serif: $georgia;
+
+// FONT-WEIGHTS
+$font-light: 300;
+$font-regular: 400;
+$font-semibold: 600;
+$font-bold: 700;
+
+// ====================
+
+// MISC: base fonts/colors
+$body-font-size: em(14);
+$body-line-height: golden-ratio(.875em, 1);
+$base-font-color: rgb(60,60,60);
+$baseFontColor: rgb(60,60,60);
+$base-font-color: rgb(60,60,60);
+$lighter-base-font-color: rgb(100,100,100);
+$very-light-text: rgb(255,255,255); // #ffffff
+
+// ====================
+
+// TIMING - used for animation/transition mixin syncing
+$tmg-s3: 3.0s;
+$tmg-s2: 2.0s;
+$tmg-s1: 1.0s;
+$tmg-avg: 0.75s;
+$tmg-f1: 0.50s;
+$tmg-f2: 0.25s;
+$tmg-f3: 0.125s;
+
+// ====================
+
+// COLORS - utility
+$transparent: rgba(0,0,0,0); // used when color value is needed for UI width/transitions but element is transparent
+
+// COLORS
+$black: rgb(0,0,0);  // #000000;
+$black-t0: rgba($black, 0.125);
+$black-t1: rgba($black, 0.25);
+$black-t2: rgba($black, 0.5);
+$black-t3: rgba($black, 0.75);
+
+$white: rgb(255,255,255);  // #FFFFFF;
+$white-t0: rgba($white, 0.125);
+$white-t1: rgba($white, 0.25);
+$white-t2: rgba($white, 0.5);
+$white-t3: rgba($white, 0.75);
+
+$gray: rgb(118,118,118);    // #767676 AA compliant
+$gray-l1: tint($gray,20%);  // #989898
+$gray-l2: tint($gray,40%);  // #b2b2b2
+$gray-l3: tint($gray,60%);  // #cbcbcb
+$gray-l4: tint($gray,80%);  // #e5e5e5
+$gray-l5: tint($gray,90%);  // #f2f2f2
+$gray-l6: tint($gray,95%);  // #f8f8f8
+$gray-l7: tint($gray,99%);  // #fdfdfd
+$gray-d1: shade($gray,20%); // #656565
+$gray-d2: shade($gray,40%); // #4c4c4c
+$gray-d3: shade($gray,60%); // #323232
+$gray-d4: shade($gray,80%); // #191919
+$gray-nav-active: #f6f6f6;
+
+$pink: rgb(182,37,103); // #b72567;
 $pink-l1: tint($pink,20%);
 $pink-l2: tint($pink,40%);
 $pink-l3: tint($pink,60%);
@@ -291,6 +369,50 @@ $m-green-t2: rgba($m-green,0.50);
 $m-green-t3: rgba($m-green,0.75);
 
 // edx-specific: verified
+// HMS colors
+
+$crimson: #A51C30;
+$ink: #1E1E1E;
+$mortar: #8C8179;
+
+// ====================
+
+// SHADOWS
+$shadow: rgba(0,0,0,0.2);
+$shadow-l1: rgba(0,0,0,0.1);
+$shadow-l2: rgba(0,0,0,0.05);
+$shadow-d1: rgba(0,0,0,0.4);
+$shadow-d2: rgba($black, 0.6);
+
+// ====================
+
+$m-base-font-size: em(15);
+
+$base-font-color: rgb(60,60,60);
+$baseFontColor: rgb(60,60,60);
+$lighter-base-font-color: rgb(100,100,100);
+$text-color: rgb(84,84,84);
+
+$dark-trans-bg: rgba(0, 0, 0, .75);
+
+$body-bg: rgb(250,250,250);
+$container-bg: $white;
+$header-image: linear-gradient(-90deg, rgba(255,255,255, 1), rgba(230,230,230, 0.9));
+$header-bg: $white;
+$courseware-header-image: linear-gradient(top, rgb(255,255,255), rgb(238,238,238));
+$courseware-header-bg: transparent;
+$footer-bg: $white;
+$courseware-footer-border: none;
+$courseware-footer-shadow: none;
+$courseware-footer-margin: 0px;
+$courseware-border-bottom-color: rgb(68,162,222); // #44a2de
+$courseware-button-border-color: rgb(230,230,230); // #e6e6e6
+$courseware-hover-color: rgb(51,52,53); // #333435
+$courseware-navigation-color: rgb(0,158,231); // #009ee7
+
+// ====================
+
+// STATE: verified
 $verified-color-lvl1: $m-green;
 $verified-color-lvl2: $m-green-l1;
 $verified-color-lvl3: $m-green-l2;

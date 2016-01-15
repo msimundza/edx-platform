@@ -54,7 +54,9 @@ function(Backbone, _, str, ModuleUtils) {
              * Note: this is not always provided as a performance optimization. It is only provided for
              * verticals functioning as units.
              */
-            'has_changes': null,
+            "icon": null, 
+            // Meta icon of the unit
+            "has_changes": null,
             /**
              * Represents the possible publish states for an xblock. See the documentation
              * for XBlockVisibility to see a comprehensive enumeration of the states.

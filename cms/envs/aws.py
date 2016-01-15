@@ -41,7 +41,15 @@ CONFIG_PREFIX = SERVICE_VARIANT + "." if SERVICE_VARIANT else ""
 DEBUG = False
 
 EMAIL_BACKEND = 'django_ses.SESBackend'
-SESSION_ENGINE = 'django.contrib.sessions.backends.cache'
+# HEAD Commit contains next line
+# SESSION_ENGINE = 'django.contrib.sessions.backends.cache'
+
+# For load balancer need to set cache_db to remeber the same login 
+#SESSION_ENGINE = 'django.contrib.sessions.backends.cache'
+SESSION_ENGINE = 'django.contrib.sessions.backends.cached_db'
+#DEFAULT_FILE_STORAGE = 'storages.backends.s3boto.S3BotoStorage'
+DEFAULT_FILE_STORAGE = 'django.core.files.storage.FileSystemStorage'
+MEDIA_ROOT = '/edx/var/edxapp/uploads'
 
 # IMPORTANT: With this enabled, the server must always be behind a proxy that
 # strips the header HTTP_X_FORWARDED_PROTO from client requests. Otherwise,
