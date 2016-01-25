@@ -1634,11 +1634,6 @@ def _do_create_account(form, custom_form=None):
         log.exception("UserProfile creation failed for user {id}.".format(id=user.id))
         raise
 
-    # TODO: remove circular dependency on openedx from common
-    from openedx.core.djangoapps.user_api.models import UserPreference
-
-    UserPreference.set_preference(user, LANGUAGE_KEY, get_language())
-
     return (user, profile, registration)
 
 
@@ -2231,7 +2226,7 @@ def mass_users_download_list(request):
 
 @require_POST
 @login_required
-@ensure_csrf_cookie
+@csrf_exempt
 def mass_users_add_user_ajax(request):
     username = request.POST.get('username')
     email = request.POST.get('email')
@@ -2275,7 +2270,7 @@ def mass_users_add_user_ajax(request):
 
 @require_POST
 @login_required
-@ensure_csrf_cookie
+@csrf_exempt
 def mass_user_check_if_users_exist_ajax(request):
     # check if user exist already
     username = request.POST.get('data')

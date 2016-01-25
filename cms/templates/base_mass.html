@@ -47,7 +47,6 @@ dir_rtl = 'rtl' if get_language_bidi() else 'ltr'
 
     <script type="text/javascript">
       window.baseUrl = ${json.dumps(settings.STATIC_URL)};
-      window.TENDER_SUBDOMAIN = ${json.dumps(settings.TENDER_SUBDOMAIN)};
       var require = {baseUrl: window.baseUrl};
     </script>
     <script type="text/javascript" src="${static.url("js/vendor/require.js")}"></script>
@@ -55,7 +54,7 @@ dir_rtl = 'rtl' if get_language_bidi() else 'ltr'
 
     ## js templates
     <script id="system-feedback-tpl" type="text/template">
-      <%static:include path="js/system-feedback.underscore" />
+      <%static:include path="common/templates/components/system-feedback.underscore" />
     </script>
 
     <!-- view -->
