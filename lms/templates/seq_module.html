@@ -55,7 +55,6 @@
             <span class="fa fa-fw fa-bookmark bookmark-icon ${"is-hidden" if not item['bookmarked'] else "bookmarked"}" aria-hidden="true"></span>
             <div class="sequence-tooltip sr"><span class="sr">${item['type']}&nbsp;</span>${item['page_title']}<span class="sr bookmark-icon-sr">&nbsp;${_("Bookmarked") if item['bookmarked'] else ""}</span></div>
           </button>
-
         </li>
         % endfor
       </ol>

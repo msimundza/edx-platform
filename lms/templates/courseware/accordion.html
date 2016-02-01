@@ -9,14 +9,16 @@
 %>
 
 <%def name="make_chapter(chapter)">
-<%
-if chapter.get('active'):
-    aria_label = _('{chapter} current chapter').format(chapter=chapter['display_name'])
-    active_class = 'active'
-else:
-    aria_label = chapter['display_name']
-    active_class = ''
-%>
+
+    <div class="chapter">
+        <%
+        if chapter.get('active'):
+            aria_label = _('{chapter} current chapter').format(chapter=chapter['display_name'])
+            active_class = 'active'
+        else:
+            aria_label = chapter['display_name']
+            active_class = ''
+        %>
 <a href="#${chapter['display_id']}-child" role="button" class="button-chapter chapter ${active_class}" id="${chapter['display_id']}-parent" aria-controls="${chapter['display_id']}-child" aria-expanded="false">
     <span class="group-heading ${active_class}" aria-label="${aria_label}">
         <span class="icon fa fa-caret-right" aria-hidden="true"></span>
@@ -63,14 +65,20 @@ else:
                         ## non-proctored section, we just show the exam format and the due date
                         ## this is the standard case in edx-platform
                         <span class="subtitle-name">${section['format']} ${due_date}</span>
-              % if 'graded' in section and section['graded']:
-                  <img src="/static/images/graded.png" alt="Graded Section">
-              % endif
+
+                        % if 'graded' in section and section['graded']:
+                            <span class="menu-icon icon fa fa-pencil-square-o" aria-hidden="true"></span>
+                            <span class="sr">${_("This content is graded")}</span>
+                        % endif
+                    % endif
+                </p>
+                % endif
             </a>
-          </li>
-      % endfor
-    </ul>
-  </div>
+        </div>
+        % endfor
+    </div>
+</div>
+</div>
 </%def>
 
 % for chapter in toc:
