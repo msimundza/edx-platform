@@ -853,7 +853,6 @@ define(['jquery', 'backbone', 'underscore', 'gettext', 'js/views/baseview',
         getEditModal: function(xblockInfo, options) {
             var tabs = [];
             var editors = [];
-            var special_exam_editors = [];
 
             if (xblockInfo.isChapter()) {
                 editors = [ReleaseDateEditor, StaffLockEditor];
@@ -862,7 +861,7 @@ define(['jquery', 'backbone', 'underscore', 'gettext', 'js/views/baseview',
 
                 var enable_special_exams = (options.enable_proctored_exams || options.enable_timed_exams);
                 if (enable_special_exams) {
-                    special_exam_editors.push(TimedExaminationPreferenceEditor);
+                    editors.push(TimedExaminationPreferenceEditor);
                 }
 
                 editors.push(StaffLockEditor);
