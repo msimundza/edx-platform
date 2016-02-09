@@ -27,7 +27,7 @@
     color: $white;
 
     &:hover, &:focus {
-      background: $gray-d1;
+      background: url("#{$static-path}/images/calc-icon.png") $gray-d1 no-repeat center;
     }
 
     &.closed {
