@@ -50,7 +50,7 @@ dir_rtl = 'rtl' if get_language_bidi() else 'ltr'
       </title>
   </%block>
 
-  % if not allow_iframing:
+   % if not allow_iframing:
       <script type="text/javascript">
         /* immediately break out of an iframe if coming from the marketing website */
         (function(window) {
@@ -60,7 +60,8 @@ dir_rtl = 'rtl' if get_language_bidi() else 'ltr'
         })(this);
       </script>
   % endif
-    <script type="text/javascript" src="/jsi18n/"></script>
+
+  <script type="text/javascript" src="/i18n.js"></script>
 
   <link rel="icon" type="image/x-icon" href="${static.url(microsite.get_value('favicon_path', settings.FAVICON_PATH))}" />
 
@@ -69,8 +70,10 @@ dir_rtl = 'rtl' if get_language_bidi() else 'ltr'
 
   % if disable_courseware_js:
     <%static:js group='base_vendor'/>
+    <%static:js group='base_application'/>
   % else:
     <%static:js group='main_vendor'/>
+    <%static:js group='application'/>
   % endif
 
   <script>
@@ -89,7 +92,7 @@ dir_rtl = 'rtl' if get_language_bidi() else 'ltr'
     }).call(this, require || RequireJS.require);
   </script>
   
-  <script type="text/javascript" src="${static.url("require-config-lms.js")}"></script>
+  <script type="text/javascript" src="${static.url("lms/js/require-config.js")}"></script>
 
   <%block name="headextra"/>
 
