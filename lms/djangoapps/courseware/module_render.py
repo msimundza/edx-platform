@@ -1150,7 +1150,7 @@ def xblock_view(request, course_id, usage_id, view_name):
 
     try:
         course_key = SlashSeparatedCourseKey.from_deprecated_string(course_id)
-        fragment = instance.fview_name, context=request.GET
+        fragment = instance.view_name, context=request.GET
     except InvalidKeyError:
         raise Http404("Invalid location")
 

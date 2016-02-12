@@ -262,6 +262,14 @@ class SequenceModule(SequenceFields, ProctoringFields, XModule):
                     'progress_url': context.get('progress_url'),
                 }
             )
+        # print "AAAAAAAAALALALALALALALLA"
+        # print prev_section_url
+        # print next_section_url
+
+        # If we're rendering this sequence, but no position is set yet,
+        # default the position to the first element
+        if self.position is None:
+            self.position = 1
 
             return banner_text, hidden_content_html
 

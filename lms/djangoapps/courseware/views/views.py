@@ -62,7 +62,7 @@ from courseware.courses import (
     UserNotEnrolled
 )
 from courseware.masquerade import setup_masquerade
-from courseware.model_data import FieldDataCache
+from courseware.model_data import FieldDataCache, ScoresClient
 from courseware.models import StudentModule, BaseStudentModuleHistory
 from courseware.url_helpers import get_redirect_url, get_redirect_url_for_global_staff
 from courseware.user_state_client import DjangoXBlockUserStateClient
@@ -92,8 +92,14 @@ from xmodule.modulestore.exceptions import ItemNotFoundError, NoPathToItem
 from xmodule.tabs import CourseTabList
 from xmodule.x_module import STUDENT_VIEW
 from lms.djangoapps.ccx.custom_exception import CCXLocatorValidationException
-from ..entrance_exams import user_must_complete_entrance_exam
-from ..module_render import get_module_for_descriptor, get_module, get_module_by_usage_id
+from ..entrance_exams import (
+    course_has_entrance_exam,
+    get_entrance_exam_content,
+    get_entrance_exam_score,
+    user_must_complete_entrance_exam,
+    user_has_passed_entrance_exam
+)
+from ..module_render import toc_for_course, get_module_for_descriptor, get_module, get_module_by_usage_id, get_prev_next_section, get_course_module
 
 
 log = logging.getLogger("edx.courseware")
@@ -204,6 +210,403 @@ def get_current_child(xmodule, min_depth=None, requested_child=None):
                 child = _get_default_child_module(children)
 
     return child
+
+
+def redirect_to_course_position(course_module, content_depth):
+    """
+    Return a redirect to the user's current place in the course.
+
+    If this is the user's first time, redirects to COURSE/CHAPTER/SECTION.
+    If this isn't the users's first time, redirects to COURSE/CHAPTER,
+    and the view will find the current section and display a message
+    about reusing the stored position.
+
+    If there is no current position in the course or chapter, then selects
+    the first child.
+
+    """
+    urlargs = {'course_id': course_module.id.to_deprecated_string()}
+    chapter = get_current_child(course_module, min_depth=content_depth)
+    if chapter is None:
+        # oops.  Something bad has happened.
+        raise Http404("No chapter found when loading current position in course")
+
+    urlargs['chapter'] = chapter.url_name
+    if course_module.position is not None:
+        return redirect(reverse('courseware_chapter', kwargs=urlargs))
+
+    # Relying on default of returning first child
+    section = get_current_child(chapter, min_depth=content_depth - 1)
+    if section is None:
+        raise Http404("No section found when loading current position in course")
+
+    urlargs['section'] = section.url_name
+    return redirect(reverse('courseware_section', kwargs=urlargs))
+
+
+def save_child_position(seq_module, child_name):
+    """
+    child_name: url_name of the child
+    """
+    for position, c in enumerate(seq_module.get_display_items(), start=1):
+        if c.location.name == child_name:
+            # Only save if position changed
+            if position != seq_module.position:
+                seq_module.position = position
+    # Save this new position to the underlying KeyValueStore
+    seq_module.save()
+
+
+def save_positions_recursively_up(user, request, field_data_cache, xmodule, course=None):
+    """
+    Recurses up the course tree starting from a leaf
+    Saving the position property based on the previous node as it goes
+    """
+    current_module = xmodule
+
+    while current_module:
+        parent_location = modulestore().get_parent_location(current_module.location)
+        parent = None
+        if parent_location:
+            parent_descriptor = modulestore().get_item(parent_location)
+            parent = get_module_for_descriptor(
+                user,
+                request,
+                parent_descriptor,
+                field_data_cache,
+                current_module.location.course_key,
+                course=course
+            )
+
+        if parent and hasattr(parent, 'position'):
+            save_child_position(parent, current_module.location.name)
+
+        current_module = parent
+
+
+@transaction.non_atomic_requests
+@login_required
+@ensure_csrf_cookie
+@cache_control(no_cache=True, no_store=True, must_revalidate=True)
+@ensure_valid_course_key
+@outer_atomic(read_committed=True)
+def index(request, course_id, chapter=None, section=None,
+          position=None):
+    """
+    Displays courseware accordion and associated content.  If course, chapter,
+    and section are all specified, renders the page, or returns an error if they
+    are invalid.
+
+    If section is not specified, displays the accordion opened to the right chapter.
+
+    If neither chapter or section are specified, redirects to user's most recent
+    chapter, or the first chapter if this is the user's first visit.
+
+    Arguments:
+
+     - request    : HTTP request
+     - course_id  : course id (str: ORG/course/URL_NAME)
+     - chapter    : chapter url_name (str)
+     - section    : section url_name (str)
+     - position   : position in module, eg of <sequential> module (str)
+
+    Returns:
+
+     - HTTPresponse
+    """
+
+    course_key = CourseKey.from_string(course_id)
+
+    # Gather metrics for New Relic so we can slice data in New Relic Insights
+    newrelic.agent.add_custom_parameter('course_id', unicode(course_key))
+    newrelic.agent.add_custom_parameter('org', unicode(course_key.org))
+
+    user = User.objects.prefetch_related("groups").get(id=request.user.id)
+
+    redeemed_registration_codes = CourseRegistrationCode.objects.filter(
+        course_id=course_key,
+        registrationcoderedemption__redeemed_by=request.user
+    )
+
+    # Redirect to dashboard if the course is blocked due to non-payment.
+    if is_course_blocked(request, redeemed_registration_codes, course_key):
+        # registration codes may be generated via Bulk Purchase Scenario
+        # we have to check only for the invoice generated registration codes
+        # that their invoice is valid or not
+        log.warning(
+            u'User %s cannot access the course %s because payment has not yet been received',
+            user,
+            course_key.to_deprecated_string()
+        )
+        return redirect(reverse('dashboard'))
+
+    request.user = user  # keep just one instance of User
+    with modulestore().bulk_operations(course_key):
+        return _index_bulk_op(request, course_key, chapter, section, position)
+
+
+# pylint: disable=too-many-statements
+def _index_bulk_op(request, course_key, chapter, section, position):
+    """
+    Render the index page for the specified course.
+    """
+    # Verify that position a string is in fact an int
+    if position is not None:
+        try:
+            int(position)
+        except ValueError:
+            raise Http404(u"Position {} is not an integer!".format(position))
+
+    course = get_course_with_access(request.user, 'load', course_key, depth=2)
+    staff_access = has_access(request.user, 'staff', course)
+    masquerade, user = setup_masquerade(request, course_key, staff_access, reset_masquerade_data=True)
+
+    registered = registered_for_course(course, user)
+    if not registered:
+        # TODO (vshnayder): do course instructors need to be registered to see course?
+        log.debug(u'User %s tried to view course %s but is not enrolled', user, course.location.to_deprecated_string())
+        return redirect(reverse('about_course', args=[course_key.to_deprecated_string()]))
+
+    # see if all pre-requisites (as per the milestones app feature) have been fulfilled
+    # Note that if the pre-requisite feature flag has been turned off (default) then this check will
+    # always pass
+    if not has_access(user, 'view_courseware_with_prerequisites', course):
+        # prerequisites have not been fulfilled therefore redirect to the Dashboard
+        log.info(
+            u'User %d tried to view course %s '
+            u'without fulfilling prerequisites',
+            user.id, unicode(course.id))
+        return redirect(reverse('dashboard'))
+
+    # Entrance Exam Check
+    # If the course has an entrance exam and the requested chapter is NOT the entrance exam, and
+    # the user hasn't yet met the criteria to bypass the entrance exam, redirect them to the exam.
+    if chapter and course_has_entrance_exam(course):
+        chapter_descriptor = course.get_child_by(lambda m: m.location.name == chapter)
+        if chapter_descriptor and not getattr(chapter_descriptor, 'is_entrance_exam', False) \
+                and user_must_complete_entrance_exam(request, user, course):
+            log.info(u'User %d tried to view course %s without passing entrance exam', user.id, unicode(course.id))
+            return redirect(reverse('courseware', args=[unicode(course.id)]))
+    # check to see if there is a required survey that must be taken before
+    # the user can access the course.
+    if survey.utils.must_answer_survey(course, user):
+        return redirect(reverse('course_survey', args=[unicode(course.id)]))
+
+    bookmarks_api_url = reverse('bookmarks')
+
+    try:
+        field_data_cache = FieldDataCache.cache_for_descriptor_descendents(
+            course_key, user, course, depth=2)
+
+        course_module = get_module_for_descriptor(
+            user, request, course, field_data_cache, course_key, course=course
+        )
+        if course_module is None:
+            log.warning(u'If you see this, something went wrong: if we got this'
+                        u' far, should have gotten a course module for this user')
+            return redirect(reverse('about_course', args=[course_key.to_deprecated_string()]))
+
+        studio_url = get_studio_url(course, 'course')
+
+        language_preference = get_user_preference(request.user, LANGUAGE_KEY)
+        if not language_preference:
+            language_preference = settings.LANGUAGE_CODE
+
+        context = {
+            'csrf': csrf(request)['csrf_token'],
+            'accordion': render_accordion(user, request, course, chapter, section, field_data_cache),
+            'COURSE_TITLE': course.display_name_with_default_escaped,
+            'course': course,
+            'init': '',
+            'fragment': Fragment(),
+            'staff_access': staff_access,
+            'studio_url': studio_url,
+            'masquerade': masquerade,
+            'xqa_server': settings.FEATURES.get('XQA_SERVER', "http://your_xqa_server.com"),
+            'bookmarks_api_url': bookmarks_api_url,
+            'language_preference': language_preference,
+        }
+
+        now = datetime.now(UTC())
+        effective_start = _adjust_start_date_for_beta_testers(user, course, course_key)
+        if not in_preview_mode() and staff_access and now < effective_start:
+            # Disable student view button if user is staff and
+            # course is not yet visible to students.
+            context['disable_student_access'] = True
+
+        has_content = course.has_children_at_depth(CONTENT_DEPTH)
+        if not has_content:
+            # Show empty courseware for a course with no units
+            return render_to_response('courseware/courseware.html', context)
+        elif chapter is None:
+            # Check first to see if we should instead redirect the user to an Entrance Exam
+            if course_has_entrance_exam(course):
+                exam_chapter = get_entrance_exam_content(request, course)
+                if exam_chapter:
+                    exam_section = None
+                    if exam_chapter.get_children():
+                        exam_section = exam_chapter.get_children()[0]
+                        if exam_section:
+                            return redirect('courseware_section',
+                                            course_id=unicode(course_key),
+                                            chapter=exam_chapter.url_name,
+                                            section=exam_section.url_name)
+
+            # passing CONTENT_DEPTH avoids returning 404 for a course with an
+            # empty first section and a second section with content
+            return redirect_to_course_position(course_module, CONTENT_DEPTH)
+
+        chapter_descriptor = course.get_child_by(lambda m: m.location.name == chapter)
+        if chapter_descriptor is not None:
+            save_child_position(course_module, chapter)
+        else:
+            raise Http404('No chapter descriptor found with name {}'.format(chapter))
+
+        chapter_module = course_module.get_child_by(lambda m: m.location.name == chapter)
+        if chapter_module is None:
+            # User may be trying to access a chapter that isn't live yet
+            if masquerade and masquerade.role == 'student':  # if staff is masquerading as student be kinder, don't 404
+                log.debug('staff masquerading as student: no chapter %s', chapter)
+                return redirect(reverse('courseware', args=[course.id.to_deprecated_string()]))
+            raise Http404
+
+        if course_has_entrance_exam(course):
+            # Message should not appear outside the context of entrance exam subsection.
+            # if section is none then we don't need to show message on welcome back screen also.
+            if getattr(chapter_module, 'is_entrance_exam', False) and section is not None:
+                context['entrance_exam_current_score'] = get_entrance_exam_score(request, course)
+                context['entrance_exam_passed'] = user_has_passed_entrance_exam(request, course)
+
+        if section is not None:
+            section_descriptor = chapter_descriptor.get_child_by(lambda m: m.location.name == section)
+
+            if section_descriptor is None:
+                # Specifically asked-for section doesn't exist
+                if masquerade and masquerade.role == 'student':  # don't 404 if staff is masquerading as student
+                    log.debug('staff masquerading as student: no section %s', section)
+                    return redirect(reverse('courseware', args=[course.id.to_deprecated_string()]))
+                raise Http404
+
+            # Find the names of the next and previous sections in the TOC
+            prev_section, next_section = get_prev_next_section(user, request, course, course_key, chapter, section)
+
+            # Compute links associated with the section names.
+            prev_section_url = None
+            if prev_section:
+                prev_section_url = reverse(
+                    'courseware_section',
+                    kwargs={'course_id': course.id,
+                            'chapter': chapter_descriptor.url_name,
+                            'section': prev_section.url_name})
+
+            next_section_url = None
+            if next_section:
+                next_section_url = reverse(
+                    'courseware_section',
+                    kwargs={'course_id': course.id,
+                            'chapter': chapter_descriptor.url_name,
+                            'section': next_section.url_name})
+
+            ## Allow chromeless operation
+            if section_descriptor.chrome:
+                chrome = [s.strip() for s in section_descriptor.chrome.lower().split(",")]
+                if 'accordion' not in chrome:
+                    context['disable_accordion'] = True
+                if 'tabs' not in chrome:
+                    context['disable_tabs'] = True
+
+            if section_descriptor.default_tab:
+                context['default_tab'] = section_descriptor.default_tab
+
+            # cdodge: this looks silly, but let's refetch the section_descriptor with depth=None
+            # which will prefetch the children more efficiently than doing a recursive load
+            section_descriptor = modulestore().get_item(section_descriptor.location, depth=None)
+
+            # Load all descendants of the section, because we're going to display its
+            # html, which in general will need all of its children
+            field_data_cache.add_descriptor_descendents(
+                section_descriptor, depth=None
+            )
+
+            section_module = get_module_for_descriptor(
+                user,
+                request,
+                section_descriptor,
+                field_data_cache,
+                course_key,
+                position,
+                course=course
+            )
+
+            if section_module is None:
+                # User may be trying to be clever and access something
+                # they don't have access to.
+                raise Http404
+
+            # Save where we are in the chapter.
+            save_child_position(chapter_module, section)
+            section_render_context = {'activate_block_id': request.GET.get('activate_block_id')}
+            context['fragment'] = section_module.render(STUDENT_VIEW, context={'prev_section_url': prev_section_url, 'next_section_url': next_section_url})
+            context['section_title'] = section_descriptor.display_name_with_default_escaped
+        else:
+            # section is none, so display a message
+            studio_url = get_studio_url(course, 'course')
+            prev_section = get_current_child(chapter_module)
+            if prev_section is None:
+                # Something went wrong -- perhaps this chapter has no sections visible to the user.
+                # Clearing out the last-visited state and showing "first-time" view by redirecting
+                # to courseware.
+                course_module.position = None
+                course_module.save()
+                return redirect(reverse('courseware', args=[course.id.to_deprecated_string()]))
+            prev_section_url = reverse('courseware_section', kwargs={
+                'course_id': course_key.to_deprecated_string(),
+                'chapter': chapter_descriptor.url_name,
+                'section': prev_section.url_name
+            })
+            context['fragment'] = Fragment(content=render_to_string(
+                'courseware/welcome-back.html',
+                {
+                    'course': course,
+                    'studio_url': studio_url,
+                    'chapter_module': chapter_module,
+                    'prev_section': prev_section,
+                    'prev_section_url': prev_section_url
+                }
+            ))
+
+        result = render_to_response('courseware/courseware.html', context)
+    except Exception as e:
+
+        # Doesn't bar Unicode characters from URL, but if Unicode characters do
+        # cause an error it is a graceful failure.
+        if isinstance(e, UnicodeEncodeError):
+            raise Http404("URL contains Unicode characters")
+
+        if isinstance(e, Http404):
+            # let it propagate
+            raise
+
+        # In production, don't want to let a 500 out for any reason
+        if settings.DEBUG:
+            raise
+        else:
+            log.exception(
+                u"Error in index view: user=%s, effective_user=%s, course=%s, chapter=%s section=%s position=%s",
+                request.user, user, course, chapter, section, position
+            )
+            try:
+                result = render_to_response('courseware/courseware-error.html', {
+                    'staff_access': staff_access,
+                    'course': course
+                })
+            except:
+                # Let the exception propagate, relying on global config to at
+                # at least return a nice error message
+                log.exception("Error while rendering courseware-error page")
+                raise
+
+    return result
 
 
 @ensure_csrf_cookie
