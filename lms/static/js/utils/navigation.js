@@ -13,6 +13,7 @@ var edx = edx || {},
                 navigation.checkForCurrent();
                 navigation.listenForClick();
                 navigation.listenForKeypress();
+                navigation.setNavigationColor();
             },
 
             getActiveIndex: function() {
@@ -24,6 +25,19 @@ var edx = edx || {},
                 }
 
                 return button;
+            },
+
+            setNavigationColor: function() {
+                var active = $('.accordion .button-chapter:has(.active)').index('.accordion .button-chapter');
+                var elements = document.getElementsByClassName('button-chapter');
+
+                for(var i=0; i<elements.length; i++) {
+                    if (i <= active) {
+                        elements[i].style.backgroundColor = '#D8D4D2';
+                    } else {
+                        elements[i].style.backgroundColor = 'white';
+                    }
+                }
             },
 
             checkForCurrent: function() {
@@ -45,6 +59,7 @@ var edx = edx || {},
 
                     navigation.closeAccordions(button, section);
                     navigation.openAccordion(button, section);
+                    navigation.setNavigationColor();
                 });
             },
 
