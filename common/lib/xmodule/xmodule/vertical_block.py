@@ -70,7 +70,7 @@ class VerticalBlock(SequenceFields, XModuleFields, StudioEditableBlock, XmlParse
             'bookmark_id': "{},{}".format(child_context['username'], unicode(self.location))
         }))
 
-        fragment.add_javascript_url(self.runtime.local_resource_url(self, 'public/js/vertical_student_view.js'))
+        fragment.add_javascript_url(self.runtime.STATIC_URL + 'xmodule_js/public/js/vertical_student_view.js')
         fragment.initialize_js('VerticalStudentView')
 
         return fragment
