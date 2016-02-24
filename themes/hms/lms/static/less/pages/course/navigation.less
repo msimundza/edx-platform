@@ -1,0 +1,138 @@
+.wrapper-course-material {
+    background-color: transparent !important;
+    border: 0 !important;
+    
+    .navbar-header {
+        .navbar-brand {
+            display: none;
+        }
+    }
+
+    ol.course-tabs {
+        margin-left: 40px;
+    }
+    
+    .course-material {
+        ol {
+            width: 100%;
+            @media only screen and (min-width: 769px) and (max-width: 1180px) {
+                div {
+                    float: none !important;
+                }
+            }
+            
+        }
+    }
+    
+    // Media screen for .wrapper-course-material
+    @media only screen and (max-width: 768px) {
+        &.progress {
+            height: auto;
+        }
+        background-color: @color-nav-main !important;
+        border-radius: 0;
+
+        .navbar-header {
+            padding-left: 15px;
+            .navbar-brand {
+                display: inline;
+                color: @white;
+                padding-left: 32%;
+            }
+            .navbar-toggle {
+                background-color: @color-nav-hamburger !important;
+                border-color: none !important;
+                border-radius: 0 !important;
+                border: 0;
+                box-shadow: none !important;
+                .icon-bar {
+                    background-color: @color-nav-hamburger-line !important;
+                }
+                &:hover {
+                    background-color: @color-nav-hamburger-line !important;
+                    .icon-bar {
+                        background-color: @color-nav-hamburger !important;
+                    }
+                }
+            }
+        }
+        
+        .course-material {
+            margin-top: 0;
+            border-color: #ecd6d8;
+            padding: 0;
+            ol.course-tabs {
+                margin: 6px 0px;
+                li {
+                    border-radius: 0;
+                    width: 100% !important;
+                    
+                    a {
+                        border-radius: 0;
+                        color: @white;
+                        &.active {
+                            color: @color-nav-hamburger-line;
+                            font-weight: bold;
+                            background-color: @color-nav-hamburger;
+                        }
+
+                    }
+                    &:hover, &:focus, &:active {
+                        a {
+                            color: @color-nav-main;
+                            background-color: @color-nav-hamburger;
+                        }
+                    }
+                }
+                div {
+                    width: 100%;
+                    li {
+                        width: 100%;
+                        a {
+                             &.active {
+                                background-color: @color-nav-main;
+                                font-weight: normal;
+                            }
+                        }
+
+                        &:hover, &:focus, &:active {
+                            a {
+                                color: @color-nav-main;
+                                background-color: @color-nav-hamburger;
+                                font-weight: normal;
+                            }
+                        }
+                    }
+                }
+            } 
+        }
+    }
+    @media only screen and (min-width: 546px) and (max-width: 650px) {
+        .navbar-header {
+            .navbar-brand {
+                padding-left: 28%;
+            }
+        }
+    }
+    @media only screen and (min-width: 465px) and (max-width: 545px) {
+        .navbar-header {
+            .navbar-brand {
+                padding-left: 24%;
+            }
+        }
+    }
+    @media only screen and (min-width: 345px) and (max-width: 465px) {
+        .navbar-header {
+            .navbar-brand {
+                padding-left: 18%;
+            }
+        }
+    }
+    @media only screen and (max-width: 346px) {
+        .navbar-header {
+            .navbar-brand {
+                padding-left: 10%;
+            }
+        }
+    }           
+}

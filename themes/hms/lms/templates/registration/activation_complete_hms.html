@@ -1,0 +1,342 @@
+<%! from django.utils.translation import ugettext as _ %>
+<%! from django.core.urlresolvers import reverse %>
+<%inherit file="../main.html" />
+
+<%block name="bodyclass">activation-page</%block>
+
+<%namespace name='static' file='../static_content.html'/>
+
+<section class="container activation">
+
+  <section class="message">
+
+    %if not already_active:
+      <h1 class="valid">Welcome ${student}</h1>
+    %else:
+      <h1>${_("Account already active!")}</h1>
+    %endif
+    <hr class="horizontal-divider">
+
+    <p>
+      %if not already_active:
+      
+        <section class="passwordreset container no-padding">
+            
+            <div class="messages type-error no-padding hidden">
+            </div>
+                        
+            <div id="password-reset-form">
+                <p>Set your password</p>
+                <form role="form" id="passwordreset-form" method="post" action="">
+                    
+                    <fieldset class="group group-form group-form-requiredinformation">
+                      <legend class="sr">${_("Required Information")}</legend>
+            
+                      <ol class="list-input">
+                        <li class="field required password" id="field-new_password1">
+                          <label for="new_password1">${_("Your New Password")}</label>
+                          <input id="new_password1" type="password" name="new_password1" placeholder="*****" value="" required/>
+                        </li>
+                        <li class="field required password" id="field-new_password2">
+                          <label for="new_password2">${_("Your New Password Again")}</label>
+                          <input id="new_password2" type="password" name="new_password2" placeholder="*****" value="" required/>
+                        </li>
+                      </ol>
+                    </fieldset>
+                    
+                    <!-- TOS section -->
+                    <section class="tos no-padding">     
+                       <h1>Terms of Service</h1>
+                        <p>Welcome to HMX. Please read these Terms of Service ("TOS") and the HMX Privacy Policy  prior to using any portion of the HMX website (the "Site," which consists of all content and pages located within the HMX web domain), including accessing any program material, chat rooms, or other electronic services. These TOS and the Privacy Policy are agreements (the "Agreements") between you and HMX. By using the Site, you accept and agree to be legally bound by the Agreements, whether or not you are a registered user. If you do not understand or do not wish to be bound by the terms of the Agreements, you should not use the Site.</p>
+
+                        <p>HMX reserves the right to modify these TOS at any time without advance notice. Any changes to these TOS will be effective immediately upon posting on this page, with an updated effective date. By accessing the Site after any changes have been made, you signify your agreement on a prospective basis to the modified TOS and all of the changes. Be sure to return to this page periodically to ensure familiarity with the most current version of these TOS.</p>
+
+                        <h2>DESCRIPTION OF HMX</h2>
+                        <p>HMX offers online educational content that may include opportunities for interactivity between the HMX staff/teachers and participants and among the participants.  </p>
+
+                        <h2>RULES FOR ONLINE CONDUCT</h2>
+                        <p>You agree that you are responsible for your own use of the Site and for your User Postings. "User Postings" include all content submitted, posted, published or distributed on the Site by you or other users of the Site, including but not limited to all forum posts, wiki edits, notes, questions, comments, videos and file uploads. You agree that you will use the Site in compliance with these TOS, the Honor Code and all applicable local, state, national and international laws, rules and regulations, including copyright laws, any laws regarding the transmission of technical data exported from your country of residence, and all United States export control laws.
+                        </p><p>
+                        As a condition of your use of the HMX services, you will not use the Site in any manner intended to damage, disable, overburden or impair any HMX server or the network(s) connected to any HMX server or to interfere with any other party's use and enjoyment of the Site. You may not attempt to gain unauthorized access to the Site, other accounts, computer systems or networks connected to any HMX server through hacking, password mining or any other means. You may not obtain or attempt to obtain any materials or information stored on the Site, its servers or associated computers through any means not intentionally made available through the Site.</p>
+
+                        <h2>THE FOLLOWING LIST OF ITEMS IS STRICTLY PROHIBITED ON THE SITE:</h2>
+                        <ul>
+                            <li>Content that defames, harasses or threatens others;</li>
+                            <li>Content that discusses illegal activities with the intent to commit them;</li>
+                            <li>Content that infringes another's intellectual property, including, but not limited to, copyrights or trademarks;</li>
+                            <li>Profane, pornographic, obscene, indecent or unlawful content;</li>
+                            <li>Advertising or any form of commercial solicitation;</li>
+                            <li>Content related to partisan political activities;</li>
+                            <li>Viruses, trojan horses, worms, time bombs, corrupted files, malware, spyware or any other similar software that may damage the operation of another's computer or property; and</li>
+                            <li>Content that contains intentionally inaccurate information or that is posted with the intent of misleading others.</li>
+                        </ul>
+
+                        <p>Furthermore, you agree not to scrape, or otherwise download in bulk, any Site content, including but not limited to a list or directory of users on the system, on-line textbooks, User Postings or user information. You agree not to misrepresent or attempt to misrepresent your identity while using the Site.</p>
+
+                        <h2>USER ACCOUNTS AND AUTHORITY</h2>
+
+                        <p>In order to participate fully in Site activities, you must provide your name, an email address and a user password in order to create a user account ("User Account"). You agree that you will never divulge or share access or access information for your User Account with any third party for any reason. In setting up your User Account, you may be prompted to enter additional optional information (e.g., your address). You represent that all information provided by you is accurate and current. You agree to maintain and update your information to keep it accurate and current. 
+                        </p><p>
+                        We care about the confidentiality and security of your personal information. Please see our Privacy Policy for more information about what information about you HMX collects and how HMX uses that information.</p>
+
+                        <h2>YOUR RIGHT TO USE CONTENT ON THE SITE</h2>
+
+                        <p>Unless indicated as being in the public domain, the content on the Site is protected by United States and foreign copyright laws. Unless otherwise expressly stated on the Site, the texts, exams, video, images and other instructional materials provided with the educational program offered on this Site are for your personal use in connection with those programs only.</p><p>
+                        Certain reference documents, digital textbooks, articles and other information on the Site are used with the permission of third parties, and use of that information is subject to certain rules and conditions, which will be posted along with the information. By using this Site you agree to abide by all such rules and conditions.
+                        </p><p>
+                        You agree to retain all copyright and other notices on any content you obtain from the Site. All rights in the Site and its content, if not expressly granted, are reserved.</p>
+
+                        <h2>USER POSTINGS</h2>
+
+                        <p>
+                        <b>User Postings Representations and Warranties.</b> By submitting or distributing your User Postings, you affirm, represent and warrant (1) that you have the necessary rights, licenses, consents and/or permissions to reproduce and publish the User Postings and to authorize HMX and its users to reproduce, modify, publish and otherwise use and distribute your User Postings in a manner consistent with the licenses granted by you below, and (2) that neither your submission of your User Postings nor the exercise of the licenses granted below will infringe or violate the rights of any third party. You, and not HMX, are solely responsible for your User Postings and the consequences of posting or publishing them.</p><p>
+                        <b>License Grant to HMX.</b> By submitting or distributing your User Postings, you hereby grant to HMX a worldwide, non-exclusive, transferable, assignable, sub licensable, fully paid-up, royalty-free, perpetual, irrevocable right and license to host, transfer, display, perform, reproduce, modify, distribute, re-distribute, relicense and otherwise use, make available and exploit your User Postings, in whole or in part, in any form and in any media formats and through any media channels (now known or hereafter developed).
+                        </p><p>
+                        <b>License Grant to HMX Users.</b> By submitting or distributing your User Postings, you hereby grant to each user of the Site a non-exclusive license to access and use your User Postings in connection with their use of the Site for their own personal purposes.
+                        </p><p>
+                        <b>No Other Enrollment.</b> When you take a program through HMX, you will not be an applicant for admission to, or enrolled in, any degree program of the Member as a result of registering for or completing a program provided by such Member through HMX. You will not be entitled to use any of the resources of the Member beyond the online programs provided on the Site, nor will you be eligible to receive student privileges or benefits provided to students enrolled in degree programs of the Member.</p>
+
+
+                        <h2>RULES FOR ACADEMIC CONDUCT</h2>
+
+                        <p>By enrolling in a program, you are joining the HMX community of learners. HMX depends upon your motivation to learn the material and to do so with honesty. In order to participate in HMX, you must agree to these terms and any additional terms that may be specified for a particular module or program.</p>
+                        <p>By enrolling in an HMX program, you agree that you will:</p>
+                        <ul>
+                            <li>Complete all assignments, assessments and written requirements of the program with my own work and only my own work. I will not submit the work of any other person.</li>
+                            <li>Maintain only one user account and not let anyone else use my username and/or password.</li>
+                            <li>Not engage in any activity that would dishonestly improve my results, or improve or hurt the results of others.</li>
+                            <li>Not post answers to problems that are being used to assess learner performance or post HMX materials or content, including videos, animations and written content, outside of the HMX program.</li>
+                            <li>Adhere to the HMX honor code and encourage the same of others.</li>
+                        </ul>
+
+                        <p>Unless otherwise indicated by the instructor of an HMX program, learners on HMX are encouraged to:</p>
+
+                        <ul>
+                            <li>Collaborate with others on the lecture videos, exercises, interactives, homework and labs.</li>
+                            <li>Discuss with others general concepts and materials in each program.</li>
+                            <li>Present ideas and written work to fellow HMX learners or others for comment or criticism.</li>
+                        </ul>
+
+                        <h2>TRADEMARKS</h2>
+
+                        <p><b>Use of HMX, Harvard Medical School, Harvard University and associated names, trademarks and service marks.</b> The "HMX," ”Harvard Medical School,” and "Harvard University" names, logos and seals are trademarks ("Trademarks") of the President and Fellows of Harvard College. You may not use any of these Trademarks, or any variations thereof, without the owner's prior written consent. You may not use any of these Trademarks, or any variations thereof, for promotional purposes, or in any way that deliberately or inadvertently claims, suggests or, in these institutions' sole judgment, gives the appearance or impression of a relationship with or endorsement by these institutions.
+                        </p><p>
+                        All Trademarks not owned by the President and Fellows of Harvard College that appear on the Site or on or through the services made available on or through the Site, if any, are the property of their respective owners.
+                        </p><p>
+                        Nothing contained on the Site should be construed as granting, by implication, estoppel or otherwise, any license or right to use any Trademark displayed on the Site without the written permission of the owner of the applicable Trademark.</p>
+
+                        <h2>DIGITAL MILLENNIUM COPYRIGHT ACT</h2>
+                        <p>Copyright owners who believe their material has been infringed on the Site should contact Harvard's DMCA agent as specified at <a href="http://www.harvard.edu/reporting-copyright-infringements">www.harvard.edu/reporting-copyright-infringements</a>.</p>
+
+                        <h2>DISCLAIMERS OF WARRANTY / LIMITATIONS OF LIABILITIES</h2>
+                        <p>THE SITE AND ANY INFORMATION, CONTENT OR SERVICES MADE AVAILABLE ON OR THROUGH THE SITE ARE PROVIDED "AS IS" AND "AS AVAILABLE" WITHOUT WARRANTY OF ANY KIND (EXPRESS, IMPLIED OR OTHERWISE), INCLUDING, WITHOUT LIMITATION, ANY IMPLIED WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NON-INFRINGEMENT, EXCEPT INSOFAR AS ANY SUCH IMPLIED WARRANTIES MAY NOT BE DISCLAIMED UNDER APPLICABLE LAW. THE SITE IS INTENDED FOR EDUCATIONAL USE ONLY AND DOES NOT PROVIDE MEDICAL ADVICE (EXPRESS, IMPLIED OR OTHERWISE). INDIVIDUAL CIRCUMSTANCES VARY SO USERS SHOULD CONSULT THEIR PHYSICIANS.
+                        </p><p>
+                        HMX AND THE HMX PARTICIPANTS (AS HERINAFTER DEFINED) DO NOT WARRANT THAT THE SITE WILL OPERATE IN AN UNINTERRUPTED OR ERROR-FREE MANNER, THAT THE SITE IS FREE OF VIRUSES OR OTHER HARMFUL COMPONENTS, OR THAT THE PROGRAMS OR CONTENT PROVIDED WILL MEET YOUR NEEDS OR EXPECTATIONS. HMX AND THE HMX PARTICIPANTS ALSO MAKE NO WARRANTY ABOUT THE ACCURACY, COMPLETENESS, TIMELINESS, OR QUALITY OF THE SITE OR ANY PROGRAMS OR CONTENT, OR THAT ANY PARTICULAR PROGRAMS OR CONTENT WILL CONTINUE TO BE MADE AVAILABLE. “HMX PARTICIPANTS” MEANS HARVARD MEDICAL SCHOOL, HARVARD UNIVERSITY, THE ENTITIES PROVIDING INFORMATION, CONTENT OR SERVICES FOR THE SITE, THE PROGRAM INSTRUCTORS AND THEIR STAFFS.
+                        </p><p>
+                        USE OF THE SITE, AND THE CONTENT AND SERVICES OBTAINED FROM OR THROUGH THE SITE, IS AT YOUR OWN RISK. YOUR ACCESS TO OR DOWNLOAD OF INFORMATION, MATERIALS OR DATA THROUGH THE SITE OR ANY REFERENCE SITES IS AT YOUR OWN DISCRETION AND RISK, AND YOU WILL BE SOLELY RESPONSIBLE FOR ANY DAMAGE TO YOUR PROPERTY (INCLUDING YOUR COMPUTER SYSTEM) OR LOSS OF DATA THAT RESULTS FROM THE DOWNLOAD OR USE OF SUCH MATERIAL OR DATA, UNLESS OTHERWISE EXPRESSLY PROVIDED FOR IN THE HMX PRIVACY POLICY. </p>
+                        <p>
+                        <b>User Postings Disclaimer.</b> You understand that when using the Site you will be exposed to User Postings from a variety of sources and that neither HMX nor the HMX Participants are responsible for the accuracy, usefulness, reliability or intellectual property rights of or relating to such User Postings. You further understand and acknowledge that you may be exposed to User Postings that are inaccurate, offensive, defamatory, indecent or objectionable and you agree to waive, and hereby do waive, any legal or equitable rights or remedies you have or may have against HMX or any of the HMX Participants with respect thereto. Neither HMX nor any of the HMX Participants endorse any User Postings or any opinion, recommendation or advice expressed therein. Neither HMX nor any of the HMX Participants have any obligation to monitor any User Postings or any other user communications through the Site.
+                        </p><p>
+                        However, HMX reserves the right to review User Postings and to exercise its sole discretion to edit or remove, in whole or in part, any User Posting at any time and for any reason, or to allow the HMX Participants to do so. Without limiting the foregoing, upon receiving notice from a user or a content owner that a User Posting allegedly does not conform to these TOS, HMX may investigate the allegation and determine in its sole discretion whether to remove the User Posting, which it reserves the right to do at any time and without notice.
+                        </p><p>
+                        <b>Links to Other Sites.</b> The Site may include hyperlinks to sites maintained or controlled by others. HMX and the HMX Participants are not responsible for and do not routinely screen, approve, review or endorse the contents of or use of any of the products or services that may be offered at these sites. If you decide to access linked third-party websites, you do so at your own risk.
+                        </p><p>
+                        TO THE FULLEST EXTENT PERMITTED BY APPLICABLE LAW, YOU AGREE THAT NEITHER HMX NOR ANY OF THE HMX PARTICIPANTS WILL BE LIABLE TO YOU FOR ANY LOSS OR DAMAGES, EITHER ACTUAL OR CONSEQUENTIAL, ARISING OUT OF OR RELATING TO THESE TERMS OF SERVICE, OR YOUR (OR ANY THIRD PARTY'S) USE OF OR INABILITY TO USE THE SITE, OR YOUR PLACEMENT OF CONTENT ON THE SITE, OR YOUR RELIANCE UPON INFORMATION OBTAINED FROM OR THROUGH THE SITE, WHETHER YOUR CLAIM IS BASED IN CONTRACT, TORT, STATUTORY OR OTHER LAW.
+                        </p><p>
+                        IN PARTICULAR, TO THE FULLEST EXTENT PERMITTED BY APPLICABLE LAW, NEITHER HMX NOR ANY OF THE HMX PARTICIPANTS WILL HAVE ANY LIABILITY FOR ANY CONSEQUENTIAL, INDIRECT, PUNITIVE, SPECIAL, EXEMPLARY OR INCIDENTAL DAMAGES, WHETHER FORESEEABLE OR UNFORESEEABLE AND WHETHER OR NOT HMX OR ANY OF THE HMX PARTICIPANTS HAS BEEN NEGLIGENT OR OTHERWISE AT FAULT (INCLUDING, BUT NOT LIMITED TO, CLAIMS FOR DEFAMATION, ERRORS, LOSS OF PROFITS, LOSS OF DATA OR INTERRUPTION IN AVAILABILITY OF DATA).
+                        </p><p>
+                        CERTAIN STATE LAWS DO NOT ALLOW LIMITATIONS ON IMPLIED WARRANTIES OR THE EXCLUSION OR LIMITATION OF CERTAIN DAMAGES. IF THESE LAWS APPLY TO YOU, SOME OR ALL OF THE ABOVE DISCLAIMERS, EXCLUSIONS, OR LIMITATIONS MAY NOT APPLY TO YOU, AND YOU MIGHT HAVE ADDITIONAL RIGHTS.
+                        </p>
+
+                        <h2>INDEMNIFICATION</h2>
+                        <p>You agree to defend, hold harmless and indemnify HMX and the HMX Participants, and their respective subsidiaries, affiliates, officers, faculty, students, fellows, governing board members, agents and employees from and against any third-party claims, actions or demands arising out of, resulting from or in any way related to your use of the Site, including any liability or expense arising from any and all claims, losses, damages (actual and consequential), suits, judgments, litigation costs and attorneys' fees, of every kind and nature. In such a case, HMX or one of the HMX Participants will provide you with written notice of such claim, suit or action.
+                        </p>
+
+                        <h2>MISCELLANEOUS</h2>
+                        <p><b>Termination Rights; Discontinuation of Programs and Content. </b>You agree that HMX, in its sole discretion, may terminate your use of the Site or your participation in it, for any reason or no reason, upon notice to you. It is HMX's policy to terminate in appropriate circumstances the accounts of users of the Site who are repeat copyright infringers. HMX and the HMX Participants reserve the right at any time in their sole discretion to cancel, delay, reschedule or alter the format of any module or program offered through HMX, or to cease providing any part or all of the Site content or related services, and you agree that neither HMX nor any of the HMX Participants will have any liability to you for such an action. If you no longer desire to participate in the Site, you may terminate your participation at any time. The rights granted to you hereunder will terminate upon any termination of your right to use the Site, but the other provisions of these TOS will survive any such termination.
+                        </p><p>
+                        <b>Entire Agreement.</b> These TOS and the Privacy Policy together constitute the entire agreement between you and HMX with respect to your use of the Site, superseding any prior agreements between you and HMX regarding your use of the Site.
+                        </p><p>
+                        <b>Waiver and Severability of TOS. </b>The failure of HMX to exercise or enforce any right or provision of these TOS shall not constitute a waiver of such right or provision. If any provision of these TOS is found by a court of competent jurisdiction to be invalid, the parties nevertheless agree that the court should endeavor to give effect to the parties' intentions as reflected in the provision and the other provisions of these TOS shall remain in full force and effect.
+                        </p><p>
+                        <b>Choice of Law/Forum Selection. </b>You agree that these TOS and any claim or dispute arising out of or relating to these TOS or any content or service obtained from or through the Site will be governed by the laws of the Commonwealth of Massachusetts, excluding its conflicts of law provisions. You agree that all such claims and disputes will be heard and resolved exclusively in the federal or state courts located in and serving Cambridge, Massachusetts, U.S.A. You consent to the personal jurisdiction of those courts over you for this purpose, and you waive and agree not to assert any objection to such proceedings in those courts (including any defense or objection of lack of proper jurisdiction or venue or inconvenience of forum).
+                        </p>
+
+                        <p><b>Effective Date:</b> June 1, 2015.</p>
+
+                        <br><br>
+
+                        <h1>Privacy Policy</h1>
+                        <p>By using this website, you are consenting to our collection and use of information in accordance with this Policy. </p>
+
+
+                        <h2>INFORMATION WE GATHER</h2>
+                        <h3>Your communications to us </h3>
+                        <p>If you request information or other resources or register or apply for a program on our website, we may ask for your name, email address, mailing address, phone number, position, affiliation, or other personal information. We may also ask you for other information at other times.  We use this information to respond to your inquiries, to customize your experience on the website, and to provide you with email notifications related to your interests. 
+                        </p><p>When you send email or other communications to us, we may retain the email address and the communications in order to process your inquiries and respond to your requests. You should also be aware that, when you voluntarily disclose personal information in comments, discussion groups, and the like, that information may be collected by others and may result in unsolicited messages from others.</p>
+                        <h3>Browsing information and cookies</h3><p>
+                        When you access this website, our servers automatically record information that your browser provides.  This may include, among other data, your Internet Protocol (IP) address, browser type, device identifiers and location, the date and time of your access, web pages visited, and files accessed.  We do not link IP addresses to any personally identifiable information. Logs of IP addresses are retained on a temporary basis, and then deleted from our system.
+                        </p><p>
+                        This website will attempt to store a small piece of data known as a “cookie” on your computer, which will be read each time you visit the site.  We may use cookies to establish continuity between related requests, to personalize the site to your preferences, to authenticate your log-in, and to analyze site traffic. Cookies do not themselves contain any personal information. You may choose to block cookies with your browser, but if you do, you may not be able to take advantage of all of this site’s features. 
+                         </p>
+
+                        <h2>USE OF INFORMATION</h2>
+                        <p>We use the information collected for the following purposes, in addition to those described above: tailoring the website to user needs and improving our content and service; generating data and reports about usage of the website and its content, including identifying how much of our audience comes from within the Harvard University network; supporting the functioning and security of the website; protecting our rights and safety and the rights and safety of others; and research. 
+                        </p><p>
+                        We may evaluate site usage by collecting statistics about the behavior of visitors to this website and analyzing user information and demographics, but only to generate aggregate statistical reports.  We may use third-party services to collect such information.  We may display this statistical information publicly or provide it to others. Such reports will not disclose site usage by individual visitors or by IP addresses. 
+                        </p><p>
+                        User information may also be shared with third-party service providers as necessary to provide and improve our web services.
+                        </p><p>
+                        Any third parties who receive user information for these purposes are prohibited from using such information for any other purpose.
+                        </p><p>
+                        We also may provide your personally identifiable information to third parties when we believe that doing so is necessary or appropriate to: satisfy any applicable law, regulation, legal process or governmental request; detect, prevent or otherwise address fraud, or security or technical issues; or protect our rights and safety and the rights and safety of our users or others.
+                        </p>
+                        <h3>Other websites and cookies</h3>
+                        <p>
+                        This website may contain links to other websites. We are not responsible for the privacy practices or the content of such web sites.
+                        </p><p>
+                        Cookies may be set by parties other than us. These “third-party cookies” may, for example, originate from websites such as YouTube, Twitter, Facebook, Google Plus or other social media services for we have implemented “plug-ins.” Since the cookie policies of these sites change over time, you should determine their policies by visiting the privacy policy pages of these sites directly.
+
+                        </p>
+                        <h3>Information protection</h3>
+                        <p>
+                        This site has security measures in place to help protect against the loss, misuse and alteration of the information under our control.  However, no such measures are 100% secure.
+                        </p>
+
+                        <h3>Contacting this web site</h3>
+                        <p>
+                        If you have any questions about this privacy statement, the practices of this site, or your dealings with this site, you can contact <a href="mailto:onlinelearning@hms.harvard.edu">onlinelearning@hms.harvard.edu</a>.
+                        </p>
+
+                        <h3>Changes to this policy </h3>
+                        <p>
+                        We may change this Privacy Policy from time to time.  If we change the policy, we will post the modified policy on the Privacy Policy page.  
+                        </p>
+
+                        <p>
+                        <b>Effective Date:</b> June 1, 2015.
+                        </p> 
+                       
+                    </section>
+                    <div class="form-group row">
+                        <div class="col-xs-12">
+                            <div class="checkbox">
+                
+                                <label><input type="checkbox" required> I agree with Terms and Conditions</label>
+                
+                            </div>
+                        </div>
+                    </div>
+                    <!-- End TOS section -->
+                    
+                    <div class="form-actions">
+                      <button name="submit" type="submit" id="submit" class="action action-primary action-update">${_("Submit and Continue")}</button>
+                    </div>
+                </form>
+            </div>
+            
+            <div class="messages type-success no-padding hidden">
+            </div>
+        
+        </section>
+    
+        
+        
+      %else:
+        ${_("This account has already been activated.")}
+
+      %endif
+    <div class="row bottom-activate hidden">
+        <p>
+          %if user_logged_in:
+            ${_("Visit your {link_start}dashboard{link_end} to see your courses.").format(link_start='<a href="{url}">'.format(url=reverse('dashboard')), link_end='</a>')}
+          %else:
+            ${_("You can now {link_start}log in{link_end} with new password.").format(link_start='<a href="{url}">'.format(url=reverse('signin_user')), link_end='</a>')}
+          %endif
+        </p>
+    </div>
+  </section>
+</section>
+
+<script>
+$(document).ready(function() {
+
+    function checkFormFields(elem1, elem2) {
+        var errorMessageElement = $('.messages.type-error');
+        var errorMessage = "";
+        if(elem1.val() != "" && elem1.val() == elem2.val()) {
+            if(elem1.val().length < 6) {
+                errorMessage += "Password must contain at least six characters<br>";
+                elem1.focus();
+            }
+        } else {
+            if(elem1.val() == "" || elem2.val() == "") {
+
+                errorMessage += "Please fil out the password fields<br>";
+            }
+            if(elem1.val() != elem2.val()) {
+                errorMessage += "Passwords don't match<br>";
+            }
+        }
+
+        if(!$('.form-group input[type=checkbox]').is(':checked')) {
+            errorMessage += "You need to agree with Terms and Conditions to continue<br>";
+        }
+
+        if(errorMessage != "") {
+            errorMessageElement.html('<p>' + errorMessage + '</p>').removeClass('hidden');
+            return false;
+        }
+        errorMessageElement.addClass('hidden');
+        return true;
+    }
+
+    $('#submit').on('click', function(e) {
+        e.preventDefault();
+
+        var pwd1 = $('#new_password1').val(),
+            pwd2 = $('#new_password2').val(),
+            pathname = window.location.href.substring(window.location.href.lastIndexOf('/') + 1),
+            is_form_ok = false,
+            tos_val = false;
+            
+
+        // check passwod fieldset
+        var pwd1Element = $('#new_password1');
+        var pwd2Element = $('#new_password2');
+
+        is_form_ok = checkFormFields(pwd1Element, pwd2Element);
+
+        if($('.form-group input[type=checkbox]').is(':checked')) {
+            tos_val = true;
+        }
+
+        if(is_form_ok) {
+            $.ajax({
+                url: 'pass_change/',
+                type: 'POST',
+                data: { 
+                "password1":pwd1,
+                "password2":pwd2,
+                "tos":tos_val,
+                "activation_key":pathname },
+                success: function(data) {
+                    if(data.success == false) {
+                        $('.messages.type-error').html('<p>'+data.message+'</p>');
+                        $('.messages.type-error').removeClass('hidden');
+                        window.scrollTo(500, 0);
+                    } else if (data.success = 'true') {
+                        $('.messages.type-error').addClass('hidden');
+                        $('.messages.type-success').html('<p>'+data.message+'</p>');
+                        $('.messages.type-success').removeClass('hidden');
+                        document.location.href = $('.bottom-activate a').attr("href");
+                    }
+                }
+            });
+        }
+        
+    });
+
+    
+});
+</script>

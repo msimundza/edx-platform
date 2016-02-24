@@ -1,0 +1,17 @@
+bower_components/
+node_modules/
+.DS_Store
+static/.DS_Store
+templates/.DS_Store
+templates/static_templates/.DS_Store
+static/css/.DS_Store
+static/fonts/.DS_Store
+static/images/.DS_Store
+static/less/.DS_Store
+static/sass/.DS_Store
+static/less/fonts/.DS_Store
+static/less/global/.DS_Store
+static/less/mixins/.DS_Store
+static/less/pages/.DS_Store
+static/less/pages/course/.DS_Store
+static/fonts/webfonts/.DS_Store

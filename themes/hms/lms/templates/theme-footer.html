@@ -1,0 +1,65 @@
+## mako
+<%! from django.utils.translation import ugettext as _ %>
+<%! from microsite_configuration.templatetags.microsite import platform_name %>
+<%! import datetime %>
+<%namespace name='static' file='static_content.html'/>
+
+<footer>
+  <div class="footer-container">
+    <div class="footer-logo-hms">
+    </div>
+    <div class="wrapper-logo col-sm-3">
+      <p>
+        <a href="/"> Harvard Medical School
+        ## this is just a placeholder logo
+        ## feel free to change this logo to your own by replacing "logo.png" with your own logo
+        </a>
+      </p>
+    </div>
+
+    <div class="references col-sm-12">
+      <div class="row">
+        <nav class="nav col-sm-12 pull-left">
+          <ul>
+            %if settings.MKTG_URL_LINK_MAP.get('ABOUT'):
+            <li>
+              <a id="about" href="${marketing_link('ABOUT')}">${_("About")}</a>
+            </li>
+            %endif
+            %if settings.MKTG_URL_LINK_MAP.get('PRIVACY'):
+            <li>
+              <a href="${marketing_link('PRIVACY')}">${_("Privacy Policy")}</a>
+            </li>
+            %endif
+            %if settings.MKTG_URL_LINK_MAP.get('TOS'):
+            <li>
+              <a href="${marketing_link('TOS')}">${_("Terms of Service")}</a>
+            </li>
+            %endif
+            <li>
+              <p class="copyright pull-right">© ${str(datetime.datetime.now().strftime('%Y'))} by the President and Fellows of Harvard College</p>
+
+            </li>            
+
+          </ul>
+        </nav>
+
+        <nav class="nav-social col-sm-3 pull-right">
+          <ul>
+            <li class="nav-social-3">
+              <a rel="external" target="_blank" href="https://twitter.com">
+                <img src="https://d37djvu3ytnwxt.cloudfront.net/static/images/social/ico-social-twitter.59116eaa21b7.png" />
+              </a>
+            </li6
+            <li class="nav-social-4">
+              <a rel="external" target="_blank" href="http://youtube.com">
+                <img src="https://d37djvu3ytnwxt.cloudfront.net/static/images/social/ico-social-youtube.909f05910c79.png" />
+              </a>
+            </li>
+
+          </ul>
+        </nav>
+      </div>
+    </div>
+  </div>
+</footer>

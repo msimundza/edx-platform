@@ -1,0 +1,29 @@
+{
+  "name": "edx-theme",
+  "private": true,
+  "description": "Open edX theme for IONISx",
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/IONISx/edx-theme.git"
+  },
+  "scripts": {
+    "test": "grunt test"
+  },
+  "license": "AGPL",
+  "bugs": {
+    "url": "https://github.com/IONISx/edx-theme/issues"
+  },
+  "homepage": "https://github.com/IONISx/edx-theme",
+  "devDependencies": {
+    "grunt": "^0.4.4",
+    "grunt-contrib-less": "^0.11.0",
+    "grunt-contrib-watch": "^0.6.1",
+    "grunt-autoprefixer": "^0.7.2",
+    "grunt-contrib-jshint": "^0.10.0",
+    "grunt-contrib-cssmin": "^0.9.0",
+    "grunt-contrib-imagemin": "^0.7.0",
+    "grunt-contrib-copy": "^0.5.0",
+    "time-grunt": "^0.3.2",
+    "load-grunt-tasks": "^0.5.0"
+  }
+}
