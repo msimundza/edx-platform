@@ -1,0 +1,223 @@
+body.courseware {
+    .window-wrap {
+        .content-wrapper {
+            .container {
+                .course-wrapper {
+                    .course-index {
+                        .navbar-header {
+                            display: none !important;
+                        }
+
+                        .accordion {
+                            nav {
+                                .chapter {
+                                    h3 {
+                                        span.ui-accordion-header-icon {
+                                            top: 0;
+                                            margin-top: 15px;
+                                        }
+                                    }
+
+                                    &:first-child {
+                                        h3 {
+                                            span.ui-accordion-header-icon {
+                                                margin-top: 21px;
+                                            }
+                                        }
+                                    }
+                                }
+
+                            }
+                        }
+                    }
+                }
+                
+                
+            } // end .container
+            
+            @media only screen and (max-width: 768px) {
+                .wrapper-course-material {
+                    margin-bottom: 5px;
+                }
+                
+                .container {
+                    margin-top: 0px;
+                    padding: 0;
+                    width: 100%;
+                    
+                    #course-content {
+                        padding-left: 10px !important;   
+                        
+                        .xblock {
+                            .sequence-nav {
+                                #sequence-list {
+                                    li {
+                                        display: inline !important;
+                                    }
+                                }
+                            }
+                        }
+                    }
+                    
+                    .course-wrapper {
+                        .course-index {
+                            .collapse {
+                                display: none !important;
+                                &.in {
+                                    display: block !important;
+                                }
+                            }
+                            .navbar-header {
+                                display: block !important;
+                                background-color: @color-accordion-nav-main;
+                                .navbar-toggle {
+                                    border: 0;
+                                    border-color: none;
+                                    box-shadow: none;
+                                    border-radius: 0;
+                                    background-color: @color-accordion-nav-hamburger !important;
+                                    .icon-bar {
+                                        background-color: @color-accordion-nav-hamburger-line !important;
+                                    }
+                                    &.exit {
+                                        position: absolute;
+                                        right: 0;
+                                        z-index: 25;
+                                        background-color: rgba(255,255,255,0.4) !important;
+                                    }
+                                    #navbar-close {
+                                        margin-top: -12px;
+                                        display: block;
+                                        width: 22px;
+                                        height: 25px;
+                                        .nav-close {
+                                            color: @white;
+                                            height: 24px;
+                                            display: inline-block;
+                                            font-size: 25px;
+                                        }
+                                    }
+                                }
+                                .navbar-brand {
+                                    display: block !important;
+                                    float: none !important;
+                                    text-align: center;
+                                    color: @white;
+                                    &.in-hide {
+                                        display: none !important;
+                                    }
+                                }
+                                
+                            }
+                            
+                            .accordion.accordion-navbar-collapse {
+                                nav {
+                                    .chapter {
+                                        background-color: @color-accordion-nav-normal !important;
+                                        border-bottom: 0;
+                                        h3 {
+                                            
+                                            span {
+                                                left: 110px !important;
+                                            }
+                                            a {
+                                                color: @white;
+                                                padding-left: 115px !important;
+                                            }
+                                        } // end of h3
+                                        
+                                        ul {
+                                            background-color: @color-accordion-nav-normal !important;
+                                            li {
+                                                margin-bottom: 0 !important;
+                                                a {
+                                                    color: @white;
+                                                    padding-left: 145px !important;
+                                                    p {
+                                                        color: @white;  
+                                                    }
+                                                }
+                                                &:hover {
+                                                    background-color: @color-accordion-nav-main !important;
+                                                }
+                                                &.active {
+                                                    a {
+                                                        background-color: @color-accordion-nav-main !important;
+                                                        border: none;
+                                                        border-color: none;
+                                                    }
+                                                }
+                                            }
+                                        } // end of ul
+                                    }
+                                }
+                            } // end of accordion-navbar-collapse
+                        }
+                        
+                    } // end .course-wrapper
+                } // end .container
+            } // end media screen 768px
+            
+            @media only screen and (min-width: 486px) and (max-width: 550px) {
+                .container {
+                    .course-wrapper {
+                        .course-index {
+                            .accordion.accordion-navbar-collapse {
+                                nav {
+                                    .chapter {
+                                        h3 {
+                                            span {
+                                                left: 75px !important
+                                            }
+                                            a {
+                                                padding-left: 85px !important;
+                                            }
+                                        }
+                                        ul {
+                                            li {
+                                                a {
+                                                    padding-left: 115px !important;
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            } // end media 486-550
+            
+            @media only screen and (max-width: 485px) {
+                .container {
+                    .course-wrapper {
+                        .course-index {
+                            .accordion.accordion-navbar-collapse {
+                                nav {
+                                    .chapter {
+                                        h3 {
+                                            span {
+                                                left: 10px !important
+                                            }
+                                            a {
+                                                padding-left: 20px !important;
+                                            }
+                                        }
+                                        ul {
+                                            li {
+                                                a {
+                                                    padding-left: 50px !important;
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            } // end media 485
+            
+        }   // end #content
+    }
+}
