@@ -84,9 +84,7 @@ define(['jquery', 'backbone', 'underscore', 'gettext', 'js/views/baseview',
         getContext: function() {
             return $.extend({
                 xblockInfo: this.model,
-                introductionMessage: this.getIntroductionMessage(),
-                enable_proctored_exams: this.options.enable_proctored_exams,
-                enable_timed_exams: this.options.enable_timed_exams
+                introductionMessage: this.getIntroductionMessage()
             });
         },
 
@@ -181,6 +179,7 @@ define(['jquery', 'backbone', 'underscore', 'gettext', 'js/views/baseview',
             this.$('.modal-section .settings-tab-button[data-tab="' + tab + '"]').addClass('active');
             this.$('.modal-section .settings-tab').hide();
             this.$('.modal-section .' + tab).show();
+
         }
     });
 
@@ -294,28 +293,6 @@ define(['jquery', 'backbone', 'underscore', 'gettext', 'js/views/baseview',
         }
     });
 
-    IconEditor = BaseDateEditor.extend({
-        fieldName: 'icon',
-        templateName: 'icon-editor',
-
-        hasChanges: function() {
-            return this.model.get("icon") != parseInt(this.$('#icon').val());
-        },
-
-        getValue: function () {
-            return (parseInt(this.$('#icon').val()));
-        },
-
-        getRequestData: function () {
-            return this.hasChanges() ? {
-                publish: 'republish',
-                metadata: {
-                    'icon': this.getValue()
-                }
-            } : {};
-        }
-    });
-
     ReleaseDateEditor = BaseDateEditor.extend({
         fieldName: 'start',
         templateName: 'release-date-editor',
@@ -390,6 +367,7 @@ define(['jquery', 'backbone', 'underscore', 'gettext', 'js/views/baseview',
         setProctoredExam: function(event) {
             event.preventDefault();
             this.selectSpecialExam(true);
+
         },
         timeLimitFocusout: function(event) {
             event.preventDefault();
@@ -403,15 +381,13 @@ define(['jquery', 'backbone', 'underscore', 'gettext', 'js/views/baseview',
             this.$('input.time').timepicker({
                 'timeFormat': 'H:i',
                 'minTime': '00:30',
-                'maxTime': '24:00',
+                'maxTime': '05:00',
                 'forceRoundTime': false
             });
 
             this.setExamType(this.model.get('is_time_limited'), this.model.get('is_proctored_exam'),
                             this.model.get('is_practice_exam'));
             this.setExamTime(this.model.get('default_time_limit_minutes'));
-
-            this.setReviewRules(this.model.get('exam_review_rules'));
         },
         setExamType: function(is_time_limited, is_proctored_exam, is_practice_exam) {
             this.$('.field-time-limit').hide();
@@ -493,7 +469,6 @@ define(['jquery', 'backbone', 'underscore', 'gettext', 'js/views/baseview',
                 metadata: {
                     'is_practice_exam': is_practice_exam,
                     'is_time_limited': is_time_limited,
-                    'exam_review_rules': exam_review_rules,
                     // We have to use the legacy field name
                     // as the Ajax handler directly populates
                     // the xBlocks fields. We will have to
