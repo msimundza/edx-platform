@@ -101,8 +101,27 @@ include_special_exams = settings.FEATURES.get('ENABLE_SPECIAL_EXAMS', False) and
                  %endif
              </a>
           </li>
+
       % endfor
       <%block name="extratabs" />
+      <div style="float:right; margin-right: 55px;">
+          <li>
+             <a href="/">
+                 Dashboard
+                 % if tab_is_active:
+                   <span class="sr">, current location</span>
+                 %endif
+             </a>
+          </li>
+          <li>
+             <a href="/logout">
+                 Sign Out
+                 % if tab_is_active:
+                   <span class="sr">, current location</span>
+                 %endif
+             </a>
+          </li>
+        </div>
     </ol>
   </div>
 </nav>
