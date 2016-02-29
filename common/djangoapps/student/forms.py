@@ -152,22 +152,10 @@ class AccountCreationForm(forms.Form):
         }
     )
     first_name = forms.CharField(
-        min_length=2,
-        max_length=30,
-        error_messages={
-            "required": _NAME_TOO_SHORT_MSG,
-            "min_length": _NAME_TOO_SHORT_MSG,
-            "max_length": _("First name too long"),
-        }
+        required=False
     )
     last_name = forms.CharField(
-        min_length=2,
-        max_length=30,
-        error_messages={
-            "required": _NAME_TOO_SHORT_MSG,
-            "min_length": _NAME_TOO_SHORT_MSG,
-            "max_length": _("Last name too long"),
-        }
+        required=False
     )
 
     def __init__(
