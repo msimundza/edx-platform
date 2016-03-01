@@ -121,13 +121,3 @@ lms/lib/comment_client/python
 autodeploy.properties
 .ws_migrations_complete
 dist
-
-### Theme files
-themes/hms/lms/static/
-themes/hms/lms/.bowerrc
-themes/hms/lms/.travis.yml
-themes/hms/lms/bower.json
-themes/hms/lms/Gruntfile.js
-themes/hms/lms/npm-debug.log
-themes/hms/lms/package.json
-themes/hms/lms/readme.md
