@@ -17,6 +17,7 @@ define(['jquery', 'backbone', 'underscore', 'gettext', 'js/views/baseview',
         ReleaseDateEditor, DueDateEditor, GradingEditor, PublishEditor, AbstractVisibilityEditor, StaffLockEditor,
         ContentVisibilityEditor, VerificationAccessEditor, TimedExaminationPreferenceEditor, AccessEditor, IconEditor;
 
+
     CourseOutlineXBlockModal = BaseModal.extend({
         events: _.extend({}, BaseModal.prototype.events, {
             'click .action-save': 'save'
@@ -290,6 +291,28 @@ define(['jquery', 'backbone', 'underscore', 'gettext', 'js/views/baseview',
                     'due': this.getValue()
                 }
             };
+        }
+    });
+
+    IconEditor = BaseDateEditor.extend({
+        fieldName: 'icon',
+        templateName: 'icon-editor',
+
+        hasChanges: function() {
+            return parseInt(this.model.get("icon")) != parseInt(this.$('#icon').val());
+        },
+
+        getValue: function () {
+            return parseInt(this.$('#icon').val());
+        },
+
+        getRequestData: function () {
+            return this.hasChanges() ? {
+                publish: 'republish',
+                metadata: {
+                    'icon': this.getValue()
+                }
+            } : {};
         }
     });
 
