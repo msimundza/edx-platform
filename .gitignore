@@ -125,3 +125,6 @@ dist
 lms/static/theme/less/
 themes/hms/lms/bower_components
 themes/hms/lms/npm-debug.log
+
+#temp todo:Remove
+requirements/
