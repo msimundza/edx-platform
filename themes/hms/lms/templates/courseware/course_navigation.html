@@ -82,8 +82,27 @@ include_special_exams = settings.FEATURES.get('ENABLE_SPECIAL_EXAMS', False) and
 
 % if disable_tabs is UNDEFINED or not disable_tabs:
 <nav class="${active_page} wrapper-course-material" aria-label="${_('Course Material')}">
-  <div class="course-material">
-    <ol class="course-tabs">
+
+<div class="navbar-header">
+    <button type="button" class="navbar-toggle pull-left" data-toggle="collapse" data-target=".navbar-collapse">
+      <span class="sr-only">Toggle navigation</span>
+      <span class="icon-bar"></span>
+      <span class="icon-bar"></span>
+      <span class="icon-bar"></span>
+    </button>
+      % for tab in get_course_tab_list(request, course):
+      <%
+          tab_is_active = (tab.tab_id == active_page) or (tab.tab_id == default_tab)
+      %>
+      % if tab_is_active:
+      <span class="navbar-brand text-uppercase">${_(tab.name) | h}</span>
+      % endif
+
+      % endfor
+  </div>
+
+  <div class="course-material navbar-collapse collapse">
+    <ol class="course-tabs nav navbar-nav">
       % for tab in get_course_tab_list(request, course):
         <%
             tab_is_active = (tab.tab_id == active_page) or (tab.tab_id == default_tab)
@@ -101,7 +120,6 @@ include_special_exams = settings.FEATURES.get('ENABLE_SPECIAL_EXAMS', False) and
                  %endif
              </a>
           </li>
-
       % endfor
       <%block name="extratabs" />
       <div style="float:right;">
