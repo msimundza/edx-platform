@@ -1,4 +1,4 @@
-.wrapper-course-material {
+<.wrapper-course-material {
     background-color: transparent !important;
     border: 0 !important;
     
@@ -13,7 +13,9 @@
     }
     
     .course-material {
-        width: 1170px !important;
+        @media screen and (min-width: 769px) and (max-width: 1180px){
+            width:95% !important;
+        }
         padding: 0 0 0 0 !important;
         ol {
             width: 100%;
