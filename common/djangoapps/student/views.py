@@ -3229,3 +3229,6 @@ class LogoutView(TemplateView):
         })
 
         return context
+        
+def trailer(request):
+    return render_to_response('trailer.html')

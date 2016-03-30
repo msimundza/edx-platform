@@ -123,6 +123,9 @@ urlpatterns = (
 
 urlpatterns += (
     url(r'^dashboard/', include('learner_dashboard.urls')),
+
+    # Trailer Page
+    url(r'^trailer$', 'student.views.trailer', name="trailer"),
 )
 
 if settings.FEATURES["ENABLE_COMBINED_LOGIN_REGISTRATION"]:
