@@ -2,12 +2,16 @@
 from __future__ import unicode_literals
 
 from django.db import migrations, models
+import datetime
+import django.db.models.deletion
+from django.conf import settings
 import xmodule_django.models
 
 
 class Migration(migrations.Migration):
 
     dependencies = [
+        migrations.swappable_dependency(settings.AUTH_USER_MODEL),
     ]
 
     operations = [
@@ -20,11 +24,23 @@ class Migration(migrations.Migration):
                 ('mode_display_name', models.CharField(max_length=255, verbose_name='Display Name')),
                 ('min_price', models.IntegerField(default=0, verbose_name='Price')),
                 ('currency', models.CharField(default=b'usd', max_length=8)),
-                ('expiration_datetime', models.DateTimeField(default=None, help_text='OPTIONAL: After this date/time, users will no longer be able to enroll in this mode. Leave this blank if users can enroll in this mode until enrollment closes for the course.', null=True, verbose_name='Upgrade Deadline', blank=True)),
+                ('_expiration_datetime', models.DateTimeField(db_column=b'expiration_datetime', default=None, blank=True, help_text='OPTIONAL: After this date/time, users will no longer be able to enroll in this mode. Leave this blank if users can enroll in this mode until enrollment closes for the course.', null=True, verbose_name='Upgrade Deadline')),
+                ('expiration_datetime_is_explicit', models.BooleanField(default=False)),
                 ('expiration_date', models.DateField(default=None, null=True, blank=True)),
                 ('suggested_prices', models.CommaSeparatedIntegerField(default=b'', max_length=255, blank=True)),
                 ('description', models.TextField(null=True, blank=True)),
                 ('sku', models.CharField(help_text='OPTIONAL: This is the SKU (stock keeping unit) of this mode in the external ecommerce service.  Leave this blank if the course has not yet been migrated to the ecommerce service.', max_length=255, null=True, verbose_name=b'SKU', blank=True)),
+                ('bulk_sku', models.CharField(default=None, max_length=255, blank=True, help_text='This is the bulk SKU (stock keeping unit) of this mode in the external ecommerce service.', null=True, verbose_name=b'Bulk SKU')),
+            ],
+        ),
+        migrations.CreateModel(
+            name='CourseModeExpirationConfig',
+            fields=[
+                ('id', models.AutoField(verbose_name='ID', serialize=False, auto_created=True, primary_key=True)),
+                ('change_date', models.DateTimeField(auto_now_add=True, verbose_name='Change date')),
+                ('enabled', models.BooleanField(default=False, verbose_name='Enabled')),
+                ('verification_window', models.DurationField(default=datetime.timedelta(10), help_text='The time period before a course ends in which a course mode will expire')),
+                ('changed_by', models.ForeignKey(on_delete=django.db.models.deletion.PROTECT, editable=False, to=settings.AUTH_USER_MODEL, null=True, verbose_name='Changed by')),
             ],
         ),
         migrations.CreateModel(

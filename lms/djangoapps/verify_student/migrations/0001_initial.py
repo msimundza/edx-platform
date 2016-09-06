@@ -25,6 +25,7 @@ class Migration(migrations.Migration):
                 ('modified', model_utils.fields.AutoLastModifiedField(default=django.utils.timezone.now, verbose_name='modified', editable=False)),
                 ('course_key', xmodule_django.models.CourseKeyField(help_text='The course for which this deadline applies', max_length=255, db_index=True)),
                 ('deadline', models.DateTimeField(help_text='The datetime after which users are no longer allowed to submit photos for verification.')),
+                ('deadline_is_explicit', models.BooleanField(default=False)),
                 ('history_id', models.AutoField(serialize=False, primary_key=True)),
                 ('history_date', models.DateTimeField()),
                 ('history_type', models.CharField(max_length=1, choices=[('+', 'Created'), ('~', 'Changed'), ('-', 'Deleted')])),
@@ -114,10 +115,8 @@ class Migration(migrations.Migration):
                 ('modified', model_utils.fields.AutoLastModifiedField(default=django.utils.timezone.now, verbose_name='modified', editable=False)),
                 ('course_key', xmodule_django.models.CourseKeyField(help_text='The course for which this deadline applies', unique=True, max_length=255, db_index=True)),
                 ('deadline', models.DateTimeField(help_text='The datetime after which users are no longer allowed to submit photos for verification.')),
+                ('deadline_is_explicit', models.BooleanField(default=False)),
             ],
-            options={
-                'abstract': False,
-            },
         ),
         migrations.CreateModel(
             name='VerificationStatus',

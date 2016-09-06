@@ -26,9 +26,5 @@ class Migration(migrations.Migration):
                 ('cache_ttl', models.PositiveIntegerField(default=0, help_text='Specified in seconds. Enable caching by setting this to a value greater than 0.', verbose_name='Cache Time To Live')),
                 ('changed_by', models.ForeignKey(on_delete=django.db.models.deletion.PROTECT, editable=False, to=settings.AUTH_USER_MODEL, null=True, verbose_name='Changed by')),
             ],
-            options={
-                'ordering': ('-change_date',),
-                'abstract': False,
-            },
         ),
     ]

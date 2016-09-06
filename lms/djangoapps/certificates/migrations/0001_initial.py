@@ -6,39 +6,19 @@ import certificates.models
 import model_utils.fields
 import xmodule_django.models
 import django_extensions.db.fields
-import django_extensions.db.fields.json
 import django.db.models.deletion
 import django.utils.timezone
-from badges.models import validate_badge_image
 from django.conf import settings
 
 
 class Migration(migrations.Migration):
 
     dependencies = [
+        ('instructor_task', '0001_initial'),
         migrations.swappable_dependency(settings.AUTH_USER_MODEL),
     ]
 
     operations = [
-        migrations.CreateModel(
-            name='BadgeAssertion',
-            fields=[
-                ('id', models.AutoField(verbose_name='ID', serialize=False, auto_created=True, primary_key=True)),
-                ('course_id', xmodule_django.models.CourseKeyField(default=None, max_length=255, blank=True)),
-                ('mode', models.CharField(max_length=100)),
-                ('data', django_extensions.db.fields.json.JSONField()),
-                ('user', models.ForeignKey(to=settings.AUTH_USER_MODEL)),
-            ],
-        ),
-        migrations.CreateModel(
-            name='BadgeImageConfiguration',
-            fields=[
-                ('id', models.AutoField(verbose_name='ID', serialize=False, auto_created=True, primary_key=True)),
-                ('mode', models.CharField(help_text='The course mode for this badge image. For example, "verified" or "honor".', unique=True, max_length=125)),
-                ('icon', models.ImageField(help_text='Badge images must be square PNG files. The file size should be under 250KB.', upload_to=b'badges', validators=[validate_badge_image])),
-                ('default', models.BooleanField(default=False, help_text='Set this value to True if you want this image to be the default image for any course modes that do not have a specified badge image. You can have only one default image.')),
-            ],
-        ),
         migrations.CreateModel(
             name='CertificateGenerationConfiguration',
             fields=[
@@ -66,6 +46,18 @@ class Migration(migrations.Migration):
             },
         ),
         migrations.CreateModel(
+            name='CertificateGenerationHistory',
+            fields=[
+                ('id', models.AutoField(verbose_name='ID', serialize=False, auto_created=True, primary_key=True)),
+                ('created', model_utils.fields.AutoCreatedField(default=django.utils.timezone.now, verbose_name='created', editable=False)),
+                ('modified', model_utils.fields.AutoLastModifiedField(default=django.utils.timezone.now, verbose_name='modified', editable=False)),
+                ('course_id', xmodule_django.models.CourseKeyField(max_length=255)),
+                ('is_regeneration', models.BooleanField(default=False)),
+                ('generated_by', models.ForeignKey(to=settings.AUTH_USER_MODEL)),
+                ('instructor_task', models.ForeignKey(to='instructor_task.InstructorTask')),
+            ],
+        ),
+        migrations.CreateModel(
             name='CertificateHtmlViewConfiguration',
             fields=[
                 ('id', models.AutoField(verbose_name='ID', serialize=False, auto_created=True, primary_key=True)),
@@ -78,6 +70,16 @@ class Migration(migrations.Migration):
                 'ordering': ('-change_date',),
                 'abstract': False,
             },
+        ),
+        migrations.CreateModel(
+            name='CertificateInvalidation',
+            fields=[
+                ('id', models.AutoField(verbose_name='ID', serialize=False, auto_created=True, primary_key=True)),
+                ('created', model_utils.fields.AutoCreatedField(default=django.utils.timezone.now, verbose_name='created', editable=False)),
+                ('modified', model_utils.fields.AutoLastModifiedField(default=django.utils.timezone.now, verbose_name='modified', editable=False)),
+                ('notes', models.TextField(default=None, null=True)),
+                ('active', models.BooleanField(default=True)),
+            ],
         ),
         migrations.CreateModel(
             name='CertificateTemplate',
@@ -105,6 +107,7 @@ class Migration(migrations.Migration):
                 ('modified', model_utils.fields.AutoLastModifiedField(default=django.utils.timezone.now, verbose_name='modified', editable=False)),
                 ('description', models.CharField(help_text='Description of the asset.', max_length=255, null=True, blank=True)),
                 ('asset', models.FileField(help_text='Asset file. It could be an image or css file.', max_length=255, upload_to=certificates.models.template_assets_path)),
+                ('asset_slug', models.SlugField(help_text="Asset's unique slug. We can reference the asset in templates using this value.", max_length=255, unique=True, null=True)),
             ],
             options={
                 'get_latest_by': 'created',
@@ -154,7 +157,7 @@ class Migration(migrations.Migration):
             fields=[
                 ('id', models.AutoField(verbose_name='ID', serialize=False, auto_created=True, primary_key=True)),
                 ('course_id', xmodule_django.models.CourseKeyField(default=None, max_length=255, blank=True)),
-                ('verify_uuid', models.CharField(default=b'', max_length=32, blank=True)),
+                ('verify_uuid', models.CharField(default=b'', max_length=32, db_index=True, blank=True)),
                 ('download_uuid', models.CharField(default=b'', max_length=32, blank=True)),
                 ('download_url', models.CharField(default=b'', max_length=128, blank=True)),
                 ('grade', models.CharField(default=b'', max_length=5, blank=True)),
@@ -178,12 +181,18 @@ class Migration(migrations.Migration):
             name='certificatetemplate',
             unique_together=set([('organization_id', 'course_key', 'mode')]),
         ),
+        migrations.AddField(
+            model_name='certificateinvalidation',
+            name='generated_certificate',
+            field=models.ForeignKey(to='certificates.GeneratedCertificate'),
+        ),
+        migrations.AddField(
+            model_name='certificateinvalidation',
+            name='invalidated_by',
+            field=models.ForeignKey(to=settings.AUTH_USER_MODEL),
+        ),
         migrations.AlterUniqueTogether(
             name='generatedcertificate',
             unique_together=set([('user', 'course_id')]),
-        ),
-        migrations.AlterUniqueTogether(
-            name='badgeassertion',
-            unique_together=set([('course_id', 'user', 'mode')]),
         ),
     ]

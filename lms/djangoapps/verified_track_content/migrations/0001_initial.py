@@ -16,6 +16,7 @@ class Migration(migrations.Migration):
             fields=[
                 ('id', models.AutoField(verbose_name='ID', serialize=False, auto_created=True, primary_key=True)),
                 ('course_key', xmodule_django.models.CourseKeyField(help_text='The course key for the course we would like to be auto-cohorted.', unique=True, max_length=255, db_index=True)),
+                ('verified_cohort_name', models.CharField(default=b'Verified Learners', max_length=100)),
                 ('enabled', models.BooleanField()),
             ],
         ),

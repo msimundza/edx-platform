@@ -23,4 +23,14 @@ class Migration(migrations.Migration):
                 ('changed_by', models.ForeignKey(on_delete=django.db.models.deletion.PROTECT, editable=False, to=settings.AUTH_USER_MODEL, null=True, verbose_name='Changed by')),
             ],
         ),
+        migrations.CreateModel(
+            name='AssetExcludedExtensionsConfig',
+            fields=[
+                ('id', models.AutoField(verbose_name='ID', serialize=False, auto_created=True, primary_key=True)),
+                ('change_date', models.DateTimeField(auto_now_add=True, verbose_name='Change date')),
+                ('enabled', models.BooleanField(default=False, verbose_name='Enabled')),
+                ('excluded_extensions', models.TextField(default=b'html', help_text=b'The file extensions to exclude from canonicalization.  No leading period required. Values should be space separated i.e. "html svg css"')),
+                ('changed_by', models.ForeignKey(on_delete=django.db.models.deletion.PROTECT, editable=False, to=settings.AUTH_USER_MODEL, null=True, verbose_name='Changed by')),
+            ],
+        ),
     ]

@@ -3,11 +3,11 @@ from __future__ import unicode_literals
 
 from django.db import migrations, models
 import openedx.core.djangoapps.credit.models
+import jsonfield.fields
 import model_utils.fields
 import xmodule_django.models
-import jsonfield.fields
-import django.db.models.deletion
 import django.utils.timezone
+import django.db.models.deletion
 from django.conf import settings
 import django.core.validators
 
@@ -19,6 +19,20 @@ class Migration(migrations.Migration):
     ]
 
     operations = [
+        migrations.CreateModel(
+            name='CreditConfig',
+            fields=[
+                ('id', models.AutoField(verbose_name='ID', serialize=False, auto_created=True, primary_key=True)),
+                ('change_date', models.DateTimeField(auto_now_add=True, verbose_name='Change date')),
+                ('enabled', models.BooleanField(default=False, verbose_name='Enabled')),
+                ('cache_ttl', models.PositiveIntegerField(default=0, help_text='Specified in seconds. Enable caching by setting this to a value greater than 0.', verbose_name='Cache Time To Live')),
+                ('changed_by', models.ForeignKey(on_delete=django.db.models.deletion.PROTECT, editable=False, to=settings.AUTH_USER_MODEL, null=True, verbose_name='Changed by')),
+            ],
+            options={
+                'ordering': ('-change_date',),
+                'abstract': False,
+            },
+        ),
         migrations.CreateModel(
             name='CreditCourse',
             fields=[
@@ -109,6 +123,9 @@ class Migration(migrations.Migration):
                 ('reason', jsonfield.fields.JSONField(default={})),
                 ('requirement', models.ForeignKey(related_name='statuses', to='credit.CreditRequirement')),
             ],
+            options={
+                'verbose_name_plural': 'Credit requirement statuses',
+            },
         ),
         migrations.CreateModel(
             name='HistoricalCreditRequest',

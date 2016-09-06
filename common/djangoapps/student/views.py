@@ -857,7 +857,7 @@ def _create_recent_enrollment_message(course_enrollments, course_modes):  # pyli
 
         return render_to_string(
             'enrollment/course_enrollment_message.html',
-            {'course_enrollment_messages': messages, platform_name}
+            {'course_enrollment_messages': messages, 'platform_name': platform_name }
         )
 
 

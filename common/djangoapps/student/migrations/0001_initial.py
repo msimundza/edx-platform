@@ -6,6 +6,7 @@ import django.utils.timezone
 import django_countries.fields
 import django.db.models.deletion
 from django.conf import settings
+import model_utils.fields
 import xmodule_django.models
 
 
@@ -16,6 +17,14 @@ class Migration(migrations.Migration):
     ]
 
     operations = [
+        migrations.CreateModel(
+            name='Announcements',
+            fields=[
+                ('id', models.AutoField(verbose_name='ID', serialize=False, auto_created=True, primary_key=True)),
+                ('announcement', models.CharField(default=b'lorem ipsum', max_length=1000)),
+                ('announcement_id', models.IntegerField(default=1)),
+            ],
+        ),
         migrations.CreateModel(
             name='AnonymousUserId',
             fields=[
@@ -42,7 +51,7 @@ class Migration(migrations.Migration):
                 ('course_id', xmodule_django.models.CourseKeyField(max_length=255, db_index=True)),
                 ('created', models.DateTimeField(db_index=True, auto_now_add=True, null=True)),
                 ('is_active', models.BooleanField(default=True)),
-                ('mode', models.CharField(default=b'honor', max_length=100)),
+                ('mode', models.CharField(default=b'audit', max_length=100)),
                 ('user', models.ForeignKey(to=settings.AUTH_USER_MODEL)),
             ],
             options={
@@ -115,7 +124,7 @@ class Migration(migrations.Migration):
                 ('course_id', xmodule_django.models.CourseKeyField(max_length=255, db_index=True)),
                 ('created', models.DateTimeField(db_index=True, null=True, editable=False, blank=True)),
                 ('is_active', models.BooleanField(default=True)),
-                ('mode', models.CharField(default=b'honor', max_length=100)),
+                ('mode', models.CharField(default=b'audit', max_length=100)),
                 ('history_id', models.AutoField(serialize=False, primary_key=True)),
                 ('history_date', models.DateTimeField()),
                 ('history_type', models.CharField(max_length=1, choices=[('+', 'Created'), ('~', 'Changed'), ('-', 'Deleted')])),
@@ -159,6 +168,19 @@ class Migration(migrations.Migration):
                 ('lockout_until', models.DateTimeField(null=True)),
                 ('user', models.ForeignKey(to=settings.AUTH_USER_MODEL)),
             ],
+        ),
+        migrations.CreateModel(
+            name='LogoutViewConfiguration',
+            fields=[
+                ('id', models.AutoField(verbose_name='ID', serialize=False, auto_created=True, primary_key=True)),
+                ('change_date', models.DateTimeField(auto_now_add=True, verbose_name='Change date')),
+                ('enabled', models.BooleanField(default=False, verbose_name='Enabled')),
+                ('changed_by', models.ForeignKey(on_delete=django.db.models.deletion.PROTECT, editable=False, to=settings.AUTH_USER_MODEL, null=True, verbose_name='Changed by')),
+            ],
+            options={
+                'ordering': ('-change_date',),
+                'abstract': False,
+            },
         ),
         migrations.CreateModel(
             name='ManualEnrollmentAudit',
@@ -211,6 +233,17 @@ class Migration(migrations.Migration):
             },
         ),
         migrations.CreateModel(
+            name='UserAttribute',
+            fields=[
+                ('id', models.AutoField(verbose_name='ID', serialize=False, auto_created=True, primary_key=True)),
+                ('created', model_utils.fields.AutoCreatedField(default=django.utils.timezone.now, verbose_name='created', editable=False)),
+                ('modified', model_utils.fields.AutoLastModifiedField(default=django.utils.timezone.now, verbose_name='modified', editable=False)),
+                ('name', models.CharField(help_text='Name of this user attribute.', max_length=255, db_index=True)),
+                ('value', models.CharField(help_text='Value of this user attribute.', max_length=255)),
+                ('user', models.ForeignKey(related_name='attributes', to=settings.AUTH_USER_MODEL)),
+            ],
+        ),
+        migrations.CreateModel(
             name='UserProfile',
             fields=[
                 ('id', models.AutoField(verbose_name='ID', serialize=False, auto_created=True, primary_key=True)),
@@ -228,7 +261,7 @@ class Migration(migrations.Migration):
                 ('goals', models.TextField(null=True, blank=True)),
                 ('allow_certificate', models.BooleanField(default=1)),
                 ('bio', models.CharField(max_length=3000, null=True, blank=True)),
-                ('profile_image_uploaded_at', models.DateTimeField(null=True)),
+                ('profile_image_uploaded_at', models.DateTimeField(null=True, blank=True)),
                 ('user', models.OneToOneField(related_name='profile', to=settings.AUTH_USER_MODEL)),
             ],
             options={
@@ -270,6 +303,10 @@ class Migration(migrations.Migration):
         migrations.AlterUniqueTogether(
             name='courseenrollmentallowed',
             unique_together=set([('email', 'course_id')]),
+        ),
+        migrations.AlterUniqueTogether(
+            name='userattribute',
+            unique_together=set([('user', 'name')]),
         ),
         migrations.AlterUniqueTogether(
             name='languageproficiency',

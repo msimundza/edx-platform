@@ -2177,7 +2177,7 @@ class CourseEnrollmentAttribute(models.Model):
 
 class Announcements(models.Model):
 
-    announcement = models.CharField(max_length=1000, null=False, default="lorem ipsum")
+    announcement = models.CharField(max_length=1000, null=False, default="Lorem ipsum")
     announcement_id = models.IntegerField(default=1)
 
     def __unicode__(self):

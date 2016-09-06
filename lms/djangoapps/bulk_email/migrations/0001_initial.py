@@ -2,6 +2,7 @@
 from __future__ import unicode_literals
 
 from django.db import migrations, models
+import django.db.models.deletion
 from django.conf import settings
 import xmodule_django.models
 
@@ -10,9 +11,20 @@ class Migration(migrations.Migration):
 
     dependencies = [
         migrations.swappable_dependency(settings.AUTH_USER_MODEL),
+        ('course_groups', '0001_initial'),
     ]
 
     operations = [
+        migrations.CreateModel(
+            name='BulkEmailFlag',
+            fields=[
+                ('id', models.AutoField(verbose_name='ID', serialize=False, auto_created=True, primary_key=True)),
+                ('change_date', models.DateTimeField(auto_now_add=True, verbose_name='Change date')),
+                ('enabled', models.BooleanField(default=False, verbose_name='Enabled')),
+                ('require_course_email_auth', models.BooleanField(default=True)),
+                ('changed_by', models.ForeignKey(on_delete=django.db.models.deletion.PROTECT, editable=False, to=settings.AUTH_USER_MODEL, null=True, verbose_name='Changed by')),
+            ],
+        ),
         migrations.CreateModel(
             name='CourseAuthorization',
             fields=[
@@ -32,7 +44,7 @@ class Migration(migrations.Migration):
                 ('created', models.DateTimeField(auto_now_add=True)),
                 ('modified', models.DateTimeField(auto_now=True)),
                 ('course_id', xmodule_django.models.CourseKeyField(max_length=255, db_index=True)),
-                ('to_option', models.CharField(default=b'myself', max_length=64, choices=[(b'myself', b'Myself'), (b'staff', b'Staff and instructors'), (b'all', b'All')])),
+                ('to_option', models.CharField(max_length=64, choices=[(b'deprecated', b'deprecated')])),
                 ('template_name', models.CharField(max_length=255, null=True)),
                 ('from_addr', models.CharField(max_length=255, null=True)),
                 ('sender', models.ForeignKey(default=1, blank=True, to=settings.AUTH_USER_MODEL, null=True)),
@@ -54,6 +66,26 @@ class Migration(migrations.Migration):
                 ('course_id', xmodule_django.models.CourseKeyField(max_length=255, db_index=True)),
                 ('user', models.ForeignKey(to=settings.AUTH_USER_MODEL, null=True)),
             ],
+        ),
+        migrations.CreateModel(
+            name='Target',
+            fields=[
+                ('id', models.AutoField(verbose_name='ID', serialize=False, auto_created=True, primary_key=True)),
+                ('target_type', models.CharField(max_length=64, choices=[(b'myself', b'Myself'), (b'staff', b'Staff and instructors'), (b'learners', b'All students'), (b'cohort', b'Specific cohort')])),
+            ],
+        ),
+        migrations.CreateModel(
+            name='CohortTarget',
+            fields=[
+                ('target_ptr', models.OneToOneField(parent_link=True, auto_created=True, primary_key=True, serialize=False, to='bulk_email.Target')),
+                ('cohort', models.ForeignKey(to='course_groups.CourseUserGroup')),
+            ],
+            bases=('bulk_email.target',),
+        ),
+        migrations.AddField(
+            model_name='courseemail',
+            name='targets',
+            field=models.ManyToManyField(to='bulk_email.Target'),
         ),
         migrations.AlterUniqueTogether(
             name='optout',
