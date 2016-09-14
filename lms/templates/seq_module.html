@@ -26,23 +26,8 @@
         ## implementation note: will need to figure out how to handle combining detail
         ## statuses of multiple modules in js.
         
-        <%
-            icon = item['icon']
-            iconClass = 'null'
-        %>
 
-        % if icon==0:
-          <% iconClass = item['type'] %>
-        % endif
-        % if icon==1:
-          <% iconClass = 'heart' %>
-        % endif
-        % if icon==2:
-          <% iconClass = 'music' %>
-        % endif
-        % if icon==3:
-          <% iconClass = 'star' %>
-        % endif
+          
 
         <li>
         <button class="seq_${item['type']} inactive progress-${item['progress_status']} nav-item"
@@ -55,6 +40,7 @@
             <span class="fa fa-fw fa-bookmark bookmark-icon ${"is-hidden" if not item['bookmarked'] else "bookmarked"}" aria-hidden="true"></span>
             <div class="sequence-tooltip sr"><span class="sr">${item['type']}&nbsp;</span>${item['page_title']}<span class="sr bookmark-icon-sr">&nbsp;${_("Bookmarked") if item['bookmarked'] else ""}</span></div>
           </button>
+
         </li>
         % endfor
       </ol>
@@ -76,13 +62,6 @@
   <div id="seq_content" class="temp"></div>
 
   <nav class="sequence-bottom" aria-label="${_('Section')}">
-      <div id="section-previous-button" style="display:none;">
-        <button class="sequence-nav-button button-previous ${'disabled' if not prev_section_url else ''}">
-          <span class="sr">${prev_section_url}</span>
-          <div class="section-previous-square"></div>
-          <div id="button-prev-overlay" onclick="location.href='${prev_section_url}';"></div>
-        </button>
-      </div>
       <div id="unit-previous-button" style="display:none;">
         <button class="sequence-nav-button button-previous">
           <span class="sr">${_('Previous')}</span>
@@ -90,13 +69,6 @@
       </div>
 
     <span class="pagination-xb" style="padding:0;"></span>
-        <div id="section-next-button" style="display:none;" >
-          <button class="sequence-nav-button button-next ${'disabled' if not next_section_url else ''}">
-            <span class="sr">${next_section_url}</span>
-            <div class="section-next-square"></div>
-            <div id="button-next-overlay" onclick="location.href='${next_section_url}';"></div>
-          </button>
-        </div>
         <div id="unit-next-button" style="display:none;">
           <button class="sequence-nav-button button-next">
             <span class="sr">${_('Next')}</span>
