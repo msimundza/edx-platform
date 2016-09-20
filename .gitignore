@@ -87,7 +87,6 @@ lms/static/css/
 lms/static/certificates/css/
 cms/static/css/
 common/static/common/js/vendor/
-lms/static/theme/css
 
 ### Styling generated from templates
 lms/static/sass/*.css
