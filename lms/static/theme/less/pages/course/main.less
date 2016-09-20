@@ -1,5 +1,23 @@
 @import 'about.less';
 
+.capa_inputtype.textline ,.formulaequationinput{
+  input {
+    margin-left: 39px;
+  }
+  .status{
+    position: relative;
+    right: -15px;
+    bottom: 5px;
+  }
+}
+
+.xmodule_display.xmodule_CapaModule div.problem div.incorrect p.status{
+    background: rgba(0, 0, 0, 0) url("/static/images/incorrect-icon.png") no-repeat scroll center center;
+  }
+.xmodule_display.xmodule_CapaModule div.problem div.correct p.status{
+    background: rgba(0, 0, 0, 0) url("/static/images/correct-icon.png") no-repeat scroll center center;
+  }
+
 .course-material {
     .ionisx-container();
 
