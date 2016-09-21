@@ -11,7 +11,8 @@
 
 <%block name="js_extra">
     <%static:require_module module_name="js/student_account/logistration_factory" class_name="LogistrationFactory">
-        var options = ${ js_escaped_string(data) | n };
+        
+        var options = ${data | n, dump_js_escaped_json};
         LogistrationFactory(options);
     </%static:require_module>
 </%block>
