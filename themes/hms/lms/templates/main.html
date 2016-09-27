@@ -56,8 +56,12 @@ dir_rtl = 'rtl' if get_language_bidi() else 'ltr'
         })(this);
       </script>
   % endif
+ <%
+    jsi18n_path = "js/i18n/{language}/djangojs.js".format(language=LANGUAGE_CODE)
+  %>
 
-  <script type="text/javascript" src="/i18n.js"></script>
+  <script type="text/javascript" src="${static.url(jsi18n_path)}"></script>
+
 
   <link rel="icon" type="image/x-icon" href="${static.url(microsite.get_value('favicon_path', settings.FAVICON_PATH))}" />
 
