@@ -221,7 +221,7 @@ def index(request, extra_context=None, user=AnonymousUser()):
 
     # Insert additional context for use in the template
     context.update(extra_context)
-    return render_to_response('index.html', context)
+    return render_to_response('splash_index.html', context)
 
 def process_survey_link(survey_link, user):
     """

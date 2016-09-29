@@ -1,0 +1,152 @@
+footer {
+    background-color: @white;
+    color: @black;
+    padding: 30px 0;
+    padding-top: 45px;
+    font-size: 0.9em;
+    overflow: hidden;
+    
+    width: auto;
+    margin: auto;
+    
+    .footer-logo-hms {
+        background-image: url(@logo-footer);
+        background-size:contain;
+        width: 90px;
+        height: 30px;
+        background-repeat: no-repeat;
+        position: absolute;
+        top: -46px;
+        margin-left: -5px;
+    }
+
+    .footer-container {
+        .ionisx-container();
+        border-top: 2px solid @crimson;
+        width: 100%;
+        position: relative;
+        padding-top: 25px;
+
+        i.fa {
+            margin-right: 5px;
+        }
+
+        a, a:link, a:visited {
+            color: #7D7D7D;
+            font-family: AvenirLTStd-Book;
+
+            &:hover {
+                color: #7D7D7D;
+            }
+        }
+
+        div {
+            p {
+                color: #7D7D7D !important;
+                font-family: AvenirLTStd-Book;
+            }
+        }
+
+        @media(min-width: @screen-sm-min){}  
+
+
+        nav {
+            ul {
+                li {
+                    text-transform: uppercase;
+                    color: #7D7D7D;
+                    display: inline-block;
+                    margin: 0 38px 0 0;
+                    
+                    &:last-child {
+                        text-transform: none;
+                        margin: 0px 0px -6px 0;
+                        float:right;
+
+                        @media (max-width: 992px) {
+                            float: left;
+                        }
+
+                        &:after {
+                            display: none;
+                        }
+                    }
+                }
+
+                @media (max-width: @screen-xs-max) {
+                    
+                    padding-bottom: 5px;
+                    margin-bottom: 5px;
+
+                    li {
+                        color: #7D7D7D;
+                        text-transform: uppercase;
+                        display: block;
+                        margin: 0;
+
+                        &:after {
+                            display: none;
+                        }
+                    }
+                }
+
+
+
+            }
+            &.nav-social {
+                display: none;
+                text-align: right;
+                ul {
+                    li {
+                        &:after {
+                            content: '';
+                        }
+                    }
+                }
+                
+            }
+        }
+
+        p:last-child {
+            margin-bottom: 0;
+        }
+
+        p.copyright {
+            font-size: 14px;
+            color: #7D7D7D;
+        }
+
+        .wrapper-logo{
+            display: none;
+        }
+
+        .wrapper-logo p a {
+            background: url('../images/logo.png');
+            background-repeat: no-repeat;
+            display: block;
+            height: 65px;
+            color: transparent;
+            &:hover {
+                color: transparent;
+            }
+        }
+
+        .by-ionisx {
+            .pull-right();
+
+            a {
+                position: absolute;
+                right: 0;
+                top: -15px;
+
+                @media (max-width: @screen-sm-max) {
+                    display: none;
+                }
+
+                img {
+                    max-width: @layout-footer-height;
+                }
+            }
+        }
+    }
+}
