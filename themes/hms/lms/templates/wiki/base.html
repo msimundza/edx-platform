@@ -1,17 +1,20 @@
 {% extends "main_django.html" %}
-{% load pipeline %}{% load sekizai_tags i18n microsite %}{% load url from future %}{% load staticfiles %}
+{% with online_help_token="wiki" %}
+{% load theme_pipeline %}{% load sekizai_tags i18n configuration %}{% load url from future %}{% load staticfiles %}
 
-{% block title %}<title>{% block pagetitle %}{% endblock %} | {% trans "Wiki" %} | {% platform_name %}</title>{% endblock %}
+{% block title %}
+  {% block pagetitle %}{% endblock %} | {% trans "Wiki" %} | {% platform_name %}
+{% endblock %}
 
 {% block bodyclass %}view-in-course view-wiki{% endblock %}
 
 {% block headextra %}
-  <script type="text/javascript" src="/i18n.js"></script>
   {% stylesheet 'course' %}
+  {% stylesheet 'style-course-vendor' %}
+  {% stylesheet 'style-course' %}
 
   <script type="text/javascript">
     function ajaxError(){}
-
     $.ajaxSetup({
       timeout: 7000,
       cache: false,
@@ -19,7 +22,6 @@
           ajaxError();
       }
     });
-
     function jsonWrapper(url, callback) {
       $.getJSON(url, function(data) {
         if (data == null) {
@@ -45,8 +47,6 @@
 
 {% endblock %}
 
-{% block nav_skip %}#wiki-content{% endblock %}
-
 {% block body %}
   {% if request.course %}
   {% with course=request.course %}
@@ -54,6 +54,7 @@
   {% endwith %}
   {% endif %}
 
+<main id="main" aria-label="Content" tabindex="-1">
   <section class="container wiki {{ selected_tab }}" id="wiki-content">
     <div class="wiki-wrapper">
       {% block wiki_body %}
@@ -75,5 +76,7 @@
     </div>
 
   </section>
+</main>
 
 {% endblock %}
+{% endwith %}

@@ -45,7 +45,7 @@ from openedx.core.djangolib.markup import HTML, Text
           % if is_programs_enabled:
             <a href=${program_authoring_url + 'new'} class="button new-button new-program-button"><span class="icon fa fa-plus icon-inline" aria-hidden="true"></span>
             ${_("New Program")}</a>
-
+          % endif
           % if user.is_staff:
             <a href="/announcements" class="button new-button new-announcement-button"><i class="icon fa fa-plus icon-inline"></i>
               ${_("Announcements")}</a>
