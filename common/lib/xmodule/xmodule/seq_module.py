@@ -245,6 +245,10 @@ class SequenceModule(SequenceFields, ProctoringFields, XModule):
         runtime user. If so, returns a banner_text or the fragment to
         display depending on whether staff is masquerading.
         """
+
+        banner_text = None
+        hidden_content_html = None
+
         if not self._can_user_view_content():
             subsection_format = (self.format or _("subsection")).lower()  # pylint: disable=no-member
 
@@ -357,15 +361,22 @@ class SequenceModule(SequenceFields, ProctoringFields, XModule):
             rendered_item = item.render(STUDENT_VIEW, context)
             fragment.add_frag_resources(rendered_item)
 
+            # `titles` is a list of titles to inject into the sequential tooltip display.
+            # We omit any blank titles to avoid blank lines in the tooltip display.
+            titles = [title.strip() for title in item.get_content_titles() if title.strip()]
+
             iteminfo = {
                 'content': rendered_item.content,
                 'page_title': getattr(item, 'tooltip_title', ''),
                 'progress_status': Progress.to_js_status_str(progress),
                 'progress_detail': Progress.to_js_detail_str(progress),
+                'title': "\n".join(titles),
                 'type': item.get_icon_class(),
                 'id': item.scope_ids.usage_id.to_deprecated_string(),
                 'bookmarked': is_bookmarked,
                 'path': " > ".join(display_names + [item.display_name_with_default]),
+                'visited': getattr(item, 'visited', False), 
+                'icon': item.icon
             }
 
             contents.append(iteminfo)

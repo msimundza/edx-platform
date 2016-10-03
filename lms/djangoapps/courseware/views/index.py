@@ -432,6 +432,7 @@ class CoursewareIndex(View):
                 table_of_contents['previous_of_active_section'],
                 table_of_contents['next_of_active_section'],
             )
+
             courseware_context['fragment'] = self.section.render(STUDENT_VIEW, section_context)
 
         return courseware_context
