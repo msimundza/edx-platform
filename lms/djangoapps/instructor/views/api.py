@@ -2074,6 +2074,7 @@ def rescore_problem(request, course_id):
     all_students and unique_student_identifier cannot both be present.
     """
     course_id = SlashSeparatedCourseKey.from_deprecated_string(course_id)
+    only_if_higher = request.POST.get('only_if_higher', None)
     problem_to_reset = strip_if_string(request.POST.get('problem_to_reset'))
     student_identifier = request.POST.get('unique_student_identifier', None)
     student = None
@@ -2100,10 +2101,10 @@ def rescore_problem(request, course_id):
 
     if student:
         response_payload['student'] = student_identifier
-        instructor_task.api.submit_rescore_problem_for_student(request, module_state_key, student)
+        instructor_task.api.submit_rescore_problem_for_student(request, module_state_key, student, only_if_higher)
         response_payload['task'] = 'created'
     elif all_students:
-        instructor_task.api.submit_rescore_problem_for_all_students(request, module_state_key)
+        instructor_task.api.submit_rescore_problem_for_all_students(request, module_state_key, only_if_higher)
         response_payload['task'] = 'created'
     else:
         return HttpResponseBadRequest()
