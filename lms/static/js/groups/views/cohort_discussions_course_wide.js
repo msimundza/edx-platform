@@ -33,7 +33,8 @@
                             entries = courseWideDiscussions.entries,
                             children = courseWideDiscussions.children;
 
-                        return HtmlUtils.joinHtml.apply(this, _.map(children, function(name) {
+                        return HtmlUtils.joinHtml.apply(this, _.map(children, function(nameType) {
+                            var name = nameType[0];
                             var entry = entries[name];
                             return subCategoryTemplate({
                                 name: name,
