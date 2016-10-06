@@ -1,297 +1,375 @@
-###
-Data Download Section
+(function() {
+  var DataDownload, PendingInstructorTasks, ReportDownloads, std_ajax_err;
 
-imports from other modules.
-wrap in (-> ... apply) to defer evaluation
-such that the value can be defined later than this assignment (file load order).
-###
+  std_ajax_err = function() {
+    return window.InstructorDashboard.util.std_ajax_err.apply(this, arguments);
+  };
 
-# Load utilities
-std_ajax_err = -> window.InstructorDashboard.util.std_ajax_err.apply this, arguments
-PendingInstructorTasks = -> window.InstructorDashboard.util.PendingInstructorTasks
-ReportDownloads = -> window.InstructorDashboard.util.ReportDownloads
+  PendingInstructorTasks = function() {
+    return window.InstructorDashboard.util.PendingInstructorTasks;
+  };
 
-# Data Download Certificate issued
-class @DataDownload_Certificate
-  constructor: (@$container) ->
-    # gather elements
-    @$list_issued_certificate_table_btn = @$container.find("input[name='issued-certificates-list']")
-    @$list_issued_certificate_csv_btn = @$container.find("input[name='issued-certificates-csv']")
-    @$certificate_display_table       = @$container.find '.certificate-data-display-table'
-    @$certificates_request_response_error  = @$container.find '.issued-certificates-error.request-response-error'
+  ReportDownloads = function() {
+    return window.InstructorDashboard.util.ReportDownloads;
+  };
 
+  this.DataDownload_Certificate = (function() {
 
-    @$list_issued_certificate_table_btn.click (e) =>
-      url = @$list_issued_certificate_table_btn.data 'endpoint'
-      # Dynamically generate slickgrid table for displaying issued certificate information.
-      @clear_ui()
-      @$certificate_display_table.text gettext('Loading data...')
-      # fetch user list
-      $.ajax
-        type: 'POST'
-        url: url
-        error: (std_ajax_err) =>
-          @clear_ui()
-          @$certificates_request_response_error.text gettext("Error getting issued certificates list.")
-          $(".issued_certificates .issued-certificates-error.msg-error").css({"display":"block"})
-        success: (data) =>
-          @clear_ui()
-          # display on a SlickGrid
-          options =
-            enableCellNavigation: true
-            enableColumnReorder: false
-            forceFitColumns: true
-            rowHeight: 35
+    function DataDownload_Certificate($container) {
+      var _this = this;
+      this.$container = $container;
+      this.$list_issued_certificate_table_btn = this.$container.find("input[name='issued-certificates-list']");
+      this.$list_issued_certificate_csv_btn = this.$container.find("input[name='issued-certificates-csv']");
+      this.$certificate_display_table = this.$container.find('.certificate-data-display-table');
+      this.$certificates_request_response_error = this.$container.find('.issued-certificates-error.request-response-error');
+      this.$list_issued_certificate_table_btn.click(function(e) {
+        var url;
+        url = _this.$list_issued_certificate_table_btn.data('endpoint');
+        _this.clear_ui();
+        _this.$certificate_display_table.text(gettext('Loading data...'));
+        return $.ajax({
+          type: 'POST',
+          url: url,
+          error: function(std_ajax_err) {
+            _this.clear_ui();
+            _this.$certificates_request_response_error.text(gettext("Error getting issued certificates list."));
+            return $(".issued_certificates .issued-certificates-error.msg-error").css({
+              "display": "block"
+            });
+          },
+          success: function(data) {
+            var $table_placeholder, columns, feature, grid_data, options;
+            _this.clear_ui();
+            options = {
+              enableCellNavigation: true,
+              enableColumnReorder: false,
+              forceFitColumns: true,
+              rowHeight: 35
+            };
+            columns = (function() {
+              var _i, _len, _ref, _results;
+              _ref = data.queried_features;
+              _results = [];
+              for (_i = 0, _len = _ref.length; _i < _len; _i++) {
+                feature = _ref[_i];
+                _results.push({
+                  id: feature,
+                  field: feature,
+                  name: data.feature_names[feature]
+                });
+              }
+              return _results;
+            })();
+            grid_data = data.certificates;
+            $table_placeholder = $('<div/>', {
+              "class": 'slickgrid'
+            });
+            _this.$certificate_display_table.append($table_placeholder);
+            return new Slick.Grid($table_placeholder, grid_data, columns, options);
+          }
+        });
+      });
+      this.$list_issued_certificate_csv_btn.click(function(e) {
+        var url;
+        _this.clear_ui();
+        url = _this.$list_issued_certificate_csv_btn.data('endpoint');
+        return location.href = url + '?csv=true';
+      });
+    }
 
-          columns = ({id: feature, field: feature, name: data.feature_names[feature]} for feature in data.queried_features)
-          grid_data = data.certificates
+    DataDownload_Certificate.prototype.clear_ui = function() {
+      this.$certificate_display_table.empty();
+      this.$certificates_request_response_error.empty();
+      return $(".issued-certificates-error.msg-error").css({
+        "display": "none"
+      });
+    };
 
-          $table_placeholder = $ '<div/>', class: 'slickgrid'
-          @$certificate_display_table.append $table_placeholder
-          new Slick.Grid($table_placeholder, grid_data, columns, options)
+    return DataDownload_Certificate;
 
-    @$list_issued_certificate_csv_btn.click (e) =>
-      @clear_ui()
-      url = @$list_issued_certificate_csv_btn.data 'endpoint'
-      location.href = url + '?csv=true'
+  })();
 
-  clear_ui: ->
-    # Clear any generated tables, warning messages, etc of certificates.
-    @$certificate_display_table.empty()
-    @$certificates_request_response_error.empty()
-    $(".issued-certificates-error.msg-error").css({"display":"none"})
+  DataDownload = (function() {
 
-# Data Download Section
-class DataDownload
-  constructor: (@$section) ->
-    # attach self to html so that instructor_dashboard.coffee can find
-    #  this object to call event handlers like 'onClickTitle'
-    @$section.data 'wrapper', @
+    function DataDownload($section) {
+      var _this = this;
+      this.$section = $section;
+      this.$section.data('wrapper', this);
+      new DataDownload_Certificate(this.$section.find('.issued_certificates'));
+      this.$list_studs_btn = this.$section.find("input[name='list-profiles']");
+      this.$list_studs_csv_btn = this.$section.find("input[name='list-profiles-csv']");
+      this.$list_proctored_exam_results_csv_btn = this.$section.find("input[name='proctored-exam-results-report']");
+      this.$survey_results_csv_btn = this.$section.find("input[name='survey-results-report']");
+      this.$list_may_enroll_csv_btn = this.$section.find("input[name='list-may-enroll-csv']");
+      this.$list_problem_responses_csv_input = this.$section.find("input[name='problem-location']");
+      this.$list_problem_responses_csv_btn = this.$section.find("input[name='list-problem-responses-csv']");
+      this.$list_anon_btn = this.$section.find("input[name='list-anon-ids']");
+      this.$grade_config_btn = this.$section.find("input[name='dump-gradeconf']");
+      this.$calculate_grades_csv_btn = this.$section.find("input[name='calculate-grades-csv']");
+      this.$problem_grade_report_csv_btn = this.$section.find("input[name='problem-grade-report']");
+      this.$async_report_btn = this.$section.find("input[class='async-report-btn']");
+      this.$download = this.$section.find('.data-download-container');
+      this.$download_display_text = this.$download.find('.data-display-text');
+      this.$download_request_response_error = this.$download.find('.request-response-error');
+      this.$reports = this.$section.find('.reports-download-container');
+      this.$download_display_table = this.$reports.find('.profile-data-display-table');
+      this.$reports_request_response = this.$reports.find('.request-response');
+      this.$reports_request_response_error = this.$reports.find('.request-response-error');
+      this.report_downloads = new (ReportDownloads())(this.$section);
+      this.instructor_tasks = new (PendingInstructorTasks())(this.$section);
+      this.clear_display();
+      this.$list_anon_btn.click(function(e) {
+        var url;
+        url = _this.$list_anon_btn.data('endpoint');
+        return location.href = url;
+      });
+      this.$list_proctored_exam_results_csv_btn.click(function(e) {
+        var url;
+        url = _this.$list_proctored_exam_results_csv_btn.data('endpoint');
+        return $.ajax({
+          type: 'POST',
+          dataType: 'json',
+          url: url,
+          error: function(std_ajax_err) {
+            _this.clear_display();
+            _this.$reports_request_response_error.text(gettext("Error generating proctored exam results. Please try again."));
+            return $(".msg-error").css({
+              "display": "block"
+            });
+          },
+          success: function(data) {
+            _this.clear_display();
+            _this.$reports_request_response.text(data['status']);
+            return $(".msg-confirm").css({
+              "display": "block"
+            });
+          }
+        });
+      });
+      this.$survey_results_csv_btn.click(function(e) {
+        var url;
+        url = _this.$survey_results_csv_btn.data('endpoint');
+        return $.ajax({
+          type: 'POST',
+          dataType: 'json',
+          url: url,
+          error: function(std_ajax_err) {
+            _this.clear_display();
+            _this.$reports_request_response_error.text(gettext("Error generating survey results. Please try again."));
+            return $(".msg-error").css({
+              "display": "block"
+            });
+          },
+          success: function(data) {
+            _this.clear_display();
+            _this.$reports_request_response.text(data['status']);
+            return $(".msg-confirm").css({
+              "display": "block"
+            });
+          }
+        });
+      });
+      this.$list_studs_csv_btn.click(function(e) {
+        var url;
+        _this.clear_display();
+        url = _this.$list_studs_csv_btn.data('endpoint');
+        url += '/csv';
+        return $.ajax({
+          type: 'POST',
+          dataType: 'json',
+          url: url,
+          error: function(std_ajax_err) {
+            _this.$reports_request_response_error.text(gettext("Error generating student profile information. Please try again."));
+            return $(".msg-error").css({
+              "display": "block"
+            });
+          },
+          success: function(data) {
+            _this.$reports_request_response.text(data['status']);
+            return $(".msg-confirm").css({
+              "display": "block"
+            });
+          }
+        });
+      });
+      this.$list_studs_btn.click(function(e) {
+        var url;
+        url = _this.$list_studs_btn.data('endpoint');
+        _this.clear_display();
+        _this.$download_display_table.text(gettext('Loading'));
+        return $.ajax({
+          type: 'POST',
+          dataType: 'json',
+          url: url,
+          error: function(std_ajax_err) {
+            _this.clear_display();
+            return _this.$download_request_response_error.text(gettext("Error getting student list."));
+          },
+          success: function(data) {
+            var $table_placeholder, columns, feature, grid, grid_data, options;
+            _this.clear_display();
+            options = {
+              enableCellNavigation: true,
+              enableColumnReorder: false,
+              forceFitColumns: true,
+              rowHeight: 35
+            };
+            columns = (function() {
+              var _i, _len, _ref, _results;
+              _ref = data.queried_features;
+              _results = [];
+              for (_i = 0, _len = _ref.length; _i < _len; _i++) {
+                feature = _ref[_i];
+                _results.push({
+                  id: feature,
+                  field: feature,
+                  name: data.feature_names[feature]
+                });
+              }
+              return _results;
+            })();
+            grid_data = data.students;
+            $table_placeholder = $('<div/>', {
+              "class": 'slickgrid'
+            });
+            _this.$download_display_table.append($table_placeholder);
+            return grid = new Slick.Grid($table_placeholder, grid_data, columns, options);
+          }
+        });
+      });
+      this.$list_problem_responses_csv_btn.click(function(e) {
+        var url;
+        _this.clear_display();
+        url = _this.$list_problem_responses_csv_btn.data('endpoint');
+        return $.ajax({
+          type: 'POST',
+          dataType: 'json',
+          url: url,
+          data: {
+            problem_location: _this.$list_problem_responses_csv_input.val()
+          },
+          error: function(std_ajax_err) {
+            _this.$reports_request_response_error.text(JSON.parse(std_ajax_err['responseText']));
+            return $(".msg-error").css({
+              "display": "block"
+            });
+          },
+          success: function(data) {
+            _this.$reports_request_response.text(data['status']);
+            return $(".msg-confirm").css({
+              "display": "block"
+            });
+          }
+        });
+      });
+      this.$list_may_enroll_csv_btn.click(function(e) {
+        var url;
+        _this.clear_display();
+        url = _this.$list_may_enroll_csv_btn.data('endpoint');
+        return $.ajax({
+          type: 'POST',
+          dataType: 'json',
+          url: url,
+          error: function(std_ajax_err) {
+            _this.$reports_request_response_error.text(gettext("Error generating list of students who may enroll. Please try again."));
+            return $(".msg-error").css({
+              "display": "block"
+            });
+          },
+          success: function(data) {
+            _this.$reports_request_response.text(data['status']);
+            return $(".msg-confirm").css({
+              "display": "block"
+            });
+          }
+        });
+      });
+      this.$grade_config_btn.click(function(e) {
+        var url;
+        url = _this.$grade_config_btn.data('endpoint');
+        return $.ajax({
+          type: 'POST',
+          dataType: 'json',
+          url: url,
+          error: function(std_ajax_err) {
+            _this.clear_display();
+            return _this.$download_request_response_error.text(gettext("Error retrieving grading configuration."));
+          },
+          success: function(data) {
+            _this.clear_display();
+            return _this.$download_display_text.html(data['grading_config_summary']);
+          }
+        });
+      });
+      this.$async_report_btn.click(function(e) {
+        var url;
+        _this.clear_display();
+        url = $(e.target).data('endpoint');
+        return $.ajax({
+          type: 'POST',
+          dataType: 'json',
+          url: url,
+          error: std_ajax_err(function() {
+            if (e.target.name === 'calculate-grades-csv') {
+              _this.$grades_request_response_error.text(gettext("Error generating grades. Please try again."));
+            } else if (e.target.name === 'problem-grade-report') {
+              _this.$grades_request_response_error.text(gettext("Error generating problem grade report. Please try again."));
+            } else if (e.target.name === 'export-ora2-data') {
+              _this.$grades_request_response_error.text(gettext("Error generating ORA data report. Please try again."));
+            }
+            return $(".msg-error").css({
+              "display": "block"
+            });
+          }),
+          success: function(data) {
+            _this.$reports_request_response.text(data['status']);
+            return $(".msg-confirm").css({
+              "display": "block"
+            });
+          }
+        });
+      });
+    }
 
-    # isolate # initialize DataDownload_Certificate subsection
-    new DataDownload_Certificate @$section.find '.issued_certificates'
+    DataDownload.prototype.onClickTitle = function() {
+      this.clear_display();
+      this.instructor_tasks.task_poller.start();
+      return this.report_downloads.downloads_poller.start();
+    };
 
-    # gather elements
-    @$list_studs_btn = @$section.find("input[name='list-profiles']")
-    @$list_studs_csv_btn = @$section.find("input[name='list-profiles-csv']")
-    @$list_proctored_exam_results_csv_btn = @$section.find("input[name='proctored-exam-results-report']")
-    @$survey_results_csv_btn = @$section.find("input[name='survey-results-report']")
-    @$list_may_enroll_csv_btn = @$section.find("input[name='list-may-enroll-csv']")
-    @$list_problem_responses_csv_input = @$section.find("input[name='problem-location']")
-    @$list_problem_responses_csv_btn = @$section.find("input[name='list-problem-responses-csv']")
-    @$list_anon_btn = @$section.find("input[name='list-anon-ids']")
-    @$grade_config_btn = @$section.find("input[name='dump-gradeconf']")
-    @$calculate_grades_csv_btn = @$section.find("input[name='calculate-grades-csv']")
-    @$problem_grade_report_csv_btn = @$section.find("input[name='problem-grade-report']")
-    @$async_report_btn = @$section.find("input[class='async-report-btn']")
+    DataDownload.prototype.onExit = function() {
+      this.instructor_tasks.task_poller.stop();
+      return this.report_downloads.downloads_poller.stop();
+    };
 
-    # response areas
-    @$download                        = @$section.find '.data-download-container'
-    @$download_display_text           = @$download.find '.data-display-text'
-    @$download_request_response_error = @$download.find '.request-response-error'
-    @$reports                         = @$section.find '.reports-download-container'
-    @$download_display_table          = @$reports.find '.profile-data-display-table'
-    @$reports_request_response        = @$reports.find '.request-response'
-    @$reports_request_response_error  = @$reports.find '.request-response-error'
+    DataDownload.prototype.clear_display = function() {
+      this.$download_display_text.empty();
+      this.$download_display_table.empty();
+      this.$download_request_response_error.empty();
+      this.$reports_request_response.empty();
+      this.$reports_request_response_error.empty();
+      $(".msg-confirm").css({
+        "display": "none"
+      });
+      return $(".msg-error").css({
+        "display": "none"
+      });
+    };
 
-    @report_downloads = new (ReportDownloads()) @$section
-    @instructor_tasks = new (PendingInstructorTasks()) @$section
-    @clear_display()
+    return DataDownload;
 
-    # attach click handlers
-    # The list-anon case is always CSV
-    @$list_anon_btn.click (e) =>
-      url = @$list_anon_btn.data 'endpoint'
-      location.href = url
+  })();
 
-    # attach click handlers
-    # The list_proctored_exam_results case is always CSV
-    @$list_proctored_exam_results_csv_btn.click (e) =>
-      url = @$list_proctored_exam_results_csv_btn.data 'endpoint'
-      # display html from proctored exam results config endpoint
-      $.ajax
-        type: 'POST'
-        dataType: 'json'
-        url: url
-        error: (std_ajax_err) =>
-          @clear_display()
-          @$reports_request_response_error.text gettext(
-            "Error generating proctored exam results. Please try again."
-          )
-          $(".msg-error").css({"display":"block"})
-        success: (data) =>
-          @clear_display()
-          @$reports_request_response.text data['status']
-          $(".msg-confirm").css({"display":"block"})
+  _.defaults(window, {
+    InstructorDashboard: {}
+  });
 
-    # attach click handlers
-    # The list_proctored_exam_results case is always CSV
-    @$survey_results_csv_btn.click (e) =>
-      url = @$survey_results_csv_btn.data 'endpoint'
-      # display html from survey results config endpoint
-      $.ajax
-        type: 'POST'
-        dataType: 'json'
-        url: url
-        error: (std_ajax_err) =>
-          @clear_display()
-          @$reports_request_response_error.text gettext(
-            "Error generating survey results. Please try again."
-          )
-          $(".msg-error").css({"display":"block"})
-        success: (data) =>
-          @clear_display()
-          @$reports_request_response.text data['status']
-          $(".msg-confirm").css({"display":"block"})
+  _.defaults(window.InstructorDashboard, {
+    sections: {}
+  });
 
-    # this handler binds to both the download
-    # and the csv button
-    @$list_studs_csv_btn.click (e) =>
-      @clear_display()
+  _.defaults(window.InstructorDashboard.sections, {
+    DataDownload: DataDownload
+  });
 
-      url = @$list_studs_csv_btn.data 'endpoint'
-      # handle csv special case
-      # redirect the document to the csv file.
-      url += '/csv'
-
-      $.ajax
-        type: 'POST'
-        dataType: 'json'
-        url: url
-        error: (std_ajax_err) =>
-          @$reports_request_response_error.text gettext("Error generating student profile information. Please try again.")
-          $(".msg-error").css({"display":"block"})
-        success: (data) =>
-          @$reports_request_response.text data['status']
-          $(".msg-confirm").css({"display":"block"})
-
-    @$list_studs_btn.click (e) =>
-      url = @$list_studs_btn.data 'endpoint'
-
-      # Dynamically generate slickgrid table for displaying student profile information
-      @clear_display()
-      @$download_display_table.text gettext('Loading')
-
-      # fetch user list
-      $.ajax
-        type: 'POST'
-        dataType: 'json'
-        url: url
-        error: (std_ajax_err) =>
-          @clear_display()
-          @$download_request_response_error.text gettext("Error getting student list.")
-        success: (data) =>
-          @clear_display()
-
-          # display on a SlickGrid
-          options =
-            enableCellNavigation: true
-            enableColumnReorder: false
-            forceFitColumns: true
-            rowHeight: 35
-
-          columns = ({id: feature, field: feature, name: data.feature_names[feature]} for feature in data.queried_features)
-          grid_data = data.students
-
-          $table_placeholder = $ '<div/>', class: 'slickgrid'
-          @$download_display_table.append $table_placeholder
-          grid = new Slick.Grid($table_placeholder, grid_data, columns, options)
-          # grid.autosizeColumns()
-
-    @$list_problem_responses_csv_btn.click (e) =>
-      @clear_display()
-
-      url = @$list_problem_responses_csv_btn.data 'endpoint'
-      $.ajax
-        type: 'POST'
-        dataType: 'json'
-        url: url
-        data:
-          problem_location: @$list_problem_responses_csv_input.val()
-        error: (std_ajax_err) =>
-          @$reports_request_response_error.text JSON.parse(std_ajax_err['responseText'])
-          $(".msg-error").css({"display":"block"})
-        success: (data) =>
-          @$reports_request_response.text data['status']
-          $(".msg-confirm").css({"display":"block"})
-
-    @$list_may_enroll_csv_btn.click (e) =>
-      @clear_display()
-
-      url = @$list_may_enroll_csv_btn.data 'endpoint'
-      $.ajax
-        type: 'POST'
-        dataType: 'json'
-        url: url
-        error: (std_ajax_err) =>
-          @$reports_request_response_error.text gettext("Error generating list of students who may enroll. Please try again.")
-          $(".msg-error").css({"display":"block"})
-        success: (data) =>
-          @$reports_request_response.text data['status']
-          $(".msg-confirm").css({"display":"block"})
-
-    @$grade_config_btn.click (e) =>
-      url = @$grade_config_btn.data 'endpoint'
-      # display html from grading config endpoint
-      $.ajax
-        type: 'POST'
-        dataType: 'json'
-        url: url
-        error: (std_ajax_err) =>
-          @clear_display()
-          @$download_request_response_error.text gettext("Error retrieving grading configuration.")
-        success: (data) =>
-          @clear_display()
-          @$download_display_text.html data['grading_config_summary']
-
-    @$async_report_btn.click (e) =>
-        # Clear any CSS styling from the request-response areas
-        #$(".msg-confirm").css({"display":"none"})
-        #$(".msg-error").css({"display":"none"})
-        @clear_display()
-        url = $(e.target).data 'endpoint'
-        $.ajax
-          type: 'POST'
-          dataType: 'json'
-          url: url
-          error: std_ajax_err =>
-            if e.target.name == 'calculate-grades-csv'
-              @$grades_request_response_error.text gettext("Error generating grades. Please try again.")
-            else if e.target.name == 'problem-grade-report'
-              @$grades_request_response_error.text gettext("Error generating problem grade report. Please try again.")
-            else if e.target.name == 'export-ora2-data'
-              @$grades_request_response_error.text gettext("Error generating ORA data report. Please try again.")
-            $(".msg-error").css({"display":"block"})
-          success: (data) =>
-            @$reports_request_response.text data['status']
-            $(".msg-confirm").css({"display":"block"})
-
-  # handler for when the section title is clicked.
-  onClickTitle: ->
-    # Clear display of anything that was here before
-    @clear_display()
-    @instructor_tasks.task_poller.start()
-    @report_downloads.downloads_poller.start()
-
-  # handler for when the section is closed
-  onExit: ->
-    @instructor_tasks.task_poller.stop()
-    @report_downloads.downloads_poller.stop()
-
-  clear_display: ->
-    # Clear any generated tables, warning messages, etc.
-    @$download_display_text.empty()
-    @$download_display_table.empty()
-    @$download_request_response_error.empty()
-    @$reports_request_response.empty()
-    @$reports_request_response_error.empty()
-    # Clear any CSS styling from the request-response areas
-    $(".msg-confirm").css({"display":"none"})
-    $(".msg-error").css({"display":"none"})
-
-# export for use
-# create parent namespaces if they do not already exist.
-_.defaults window, InstructorDashboard: {}
-_.defaults window.InstructorDashboard, sections: {}
-_.defaults window.InstructorDashboard.sections,
-  DataDownload: DataDownload
+}).call(this);
