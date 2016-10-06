@@ -14,7 +14,7 @@ from django.utils.importlib import import_module
 import mock
 
 from openedx.core.djangoapps.user_api.preferences.api import get_user_preference
-from lang_pref import LANGUAGE_KEY
+from openedx.core.djangoapps.lang_pref import LANGUAGE_KEY
 from notification_prefs import NOTIFICATION_PREF_KEY
 from openedx.core.djangoapps.external_auth.models import ExternalAuthMap
 import student
