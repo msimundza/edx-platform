@@ -347,6 +347,23 @@ class TestMultipleProblemTypesSubsectionScores(ModuleStoreTestCase, ProblemSubmi
             del metadata[u'weight']
         add_xml_block_from_file(block_type, filename, parent=self.vert1, metadata=metadata)
 
+    def test_loading_lti_problem(self):
+        metadata = self._get_altered_metadata({
+            'lti_id': 'lms',
+            'launch_url': 'http://www.imsglobal.org/developers/LTI/test/v1p1/tool.php'
+        })
+        del metadata[u'weight']
+        ItemFactory.create(
+            category=u'lti',
+            display_name=u'lti',
+            parent=self.vert1,
+            has_score=True,
+        )
+        course_structure = get_course_blocks(self.student, self.course.location)
+        score = self._get_fresh_subsection_score(course_structure, self.seq1)
+        self.assertEqual((score.graded_total.earned, score.graded_total.possible), (0.0, 1.0))
+        self.assertEqual((score.all_total.earned, score.all_total.possible), (0.0, 1.0))
+
     @ddt.data(
         ({}, 1.25, 2.5),
         ({u'weight': 27}, 13.5, 27),
