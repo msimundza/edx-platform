@@ -305,8 +305,8 @@ class CourseTabList(List):
         """
 
         course.tabs.extend([
-            CourseTab.load('course_info'),
-            CourseTab.load('courseware')
+            CourseTab.load('courseware'),
+            CourseTab.load('course_info')
         ])
 
         # Presence of syllabus tab is indicated by a course attribute
@@ -401,10 +401,10 @@ class CourseTabList(List):
         Reverse and Rename Courseware to Course and Course Info to Home Tabs.
         """
         if tabs and len(tabs) > 1:
-            if tabs[0].get('type') == 'courseware' and tabs[1].get('type') == 'course_info':
+            if tabs[0].get('type') == 'course_info' and tabs[1].get('type') == 'courseware':
                 tabs[0], tabs[1] = tabs[1], tabs[0]
-                tabs[0]['name'] = _('Home')
-                tabs[1]['name'] = _('Course')
+                tabs[0]['name'] = _('Courseware')
+                tabs[1]['name'] = _('Course Info')
 
         return tabs
 
@@ -425,13 +425,13 @@ class CourseTabList(List):
         if len(tabs) < 2:
             raise InvalidTabsException("Expected at least two tabs.  tabs: '{0}'".format(tabs))
 
-        if tabs[0].get('type') != 'course_info':
+        if tabs[1].get('type') != 'course_info':
             raise InvalidTabsException(
-                "Expected first tab to have type 'course_info'.  tabs: '{0}'".format(tabs))
+                "Expected second tab to have type 'course_info'.  tabs: '{0}'".format(tabs))
 
-        if tabs[1].get('type') != 'courseware':
+        if tabs[0].get('type') != 'courseware':
             raise InvalidTabsException(
-                "Expected second tab to have type 'courseware'.  tabs: '{0}'".format(tabs))
+                "Expected first tab to have type 'courseware'.  tabs: '{0}'".format(tabs))
 
         # the following tabs should appear only once
         # TODO: don't import openedx capabilities from common

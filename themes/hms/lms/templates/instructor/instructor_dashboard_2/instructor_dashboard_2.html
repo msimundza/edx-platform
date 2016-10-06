@@ -84,8 +84,9 @@ from django.core.urlresolvers import reverse
 
 <script language="JavaScript" type="text/javascript"></script>
 
-<section class="container">
+<div class="container">
   <div class="instructor-dashboard-wrapper-2">
+  <main id="main" aria-label="Content" tabindex="-1"> 
     <section class="instructor-dashboard-content-2" id="instructor-dashboard-content">
       <div class="wrap-instructor-info studio-view">
         %if studio_url:
@@ -108,7 +109,7 @@ from django.core.urlresolvers import reverse
       % for section_data in sections:
         ## This is necessary so we don't scrape 'section_display_name' as a string.
         <% dname = section_data['section_display_name'] %>
-        <li class="nav-item"><a href="" data-section="${ section_data['section_key'] }">${_(dname)}</a></li>
+        <li class="nav-item"><a href="" class="btn-link" data-section="${ section_data['section_key'] }">${_(dname)}</a></li>
       % endfor
     </ul>
 
@@ -121,6 +122,7 @@ from django.core.urlresolvers import reverse
       </section>
       % endfor
     </section>
+    </main>
   </div>
-</section>
+</div>
 
