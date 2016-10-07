@@ -64,10 +64,10 @@ class ConditionalModule(ConditionalFields, XModule):
 
     js = {
         'coffee': [
-            resource_string(__name__, 'js/src/javascript_loader.coffee'),
             resource_string(__name__, 'js/src/conditional/display.coffee'),
         ],
         'js': [
+            resource_string(__name__, 'js/src/javascript_loader.js'),
             resource_string(__name__, 'js/src/collapsible.js'),
         ]
     }
