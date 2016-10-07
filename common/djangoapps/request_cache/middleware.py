@@ -60,33 +60,37 @@ class RequestCache(object):
         return None
 
 
-def request_cached(wrapped):
+def request_cached(f):
     """
-    Wraps a function and automatically handles caching its return value, as well as
-    returning that cached value for subsequent calls to the same function, with the
-    same parameters, within a given request.
+    A decorator for wrapping a function and automatically handles caching its return value, as well as returning
+    that cached value for subsequent calls to the same function, with the same parameters, within a given request.
 
-    Caveats:
-        - we convert positional arguments to their string equivalent and use them in the cache key, so if something
-          can't be converted to a string, things might blow up
-        - our cache key depends on the positional args (so , holistically, cache efficiency is tied to cardinality)
-        - we use the default request cache, not a named request cache
-        - the cache key is prefixed with the name of the wrapped function, so theoretically, an identically named
-          function elsewhere in the code with the same parameters could overwrite cached values
+    Notes:
+        - we convert arguments and keyword arguments to their string form to build the cache key, so if you have
+          args/kwargs that can't be converted to strings, you're gonna have a bad time (don't do it)
+        - cache key cardinality depends on the args/kwargs, so if you're caching a function that takes five arguments,
+          you might have deceptively low cache efficiency.  prefer function with fewer arguments.
+        - we use the default request cache, not a named request cache (this shouldn't matter, but just mentioning it)
+        - benchmark, benchmark, benchmark! if you never measure, how will you know you've improved? or regressed?
+
+    Arguments:
+        f (func): the function to wrap
+
+    Returns:
+        func: a wrapper function which will call the wrapped function, passing in the same args/kwargs,
+              cache the value it returns, and return that cached value for subsequent calls with the
+              same args/kwargs within a single request
     """
     def wrapper(*args, **kwargs):
         """
         Wrapper function to decorate with.
         """
 
-        # Build our cache key based on the name of the function we're wrapping
-        # and the parameters passed in to it.  This could get a little dicey
-        # but the intention is that the only functions being decorated with this
-        # are akin to pure functions, where you're passing in simple values and
-        # getting something out, and don't require full objects that you modify,
-        # or anything like that.
-        converted_params = map(str, args)
-        cache_keys = [wrapped.func_name] + converted_params
+        # Build our cache key based on the module the function belongs to, the functions name, and a stringified
+        # list of arguments and a query string-style stringified list of keyword arguments.
+        converted_args = map(str, args)
+        converted_kwargs = map(str, reduce(list.__add__, map(list, kwargs.iteritems()), []))
+        cache_keys = [f.__module__, f.func_name] + converted_args + converted_kwargs
         cache_key = '.'.join(cache_keys)
 
         # Check to see if we have a result in cache.  If not, invoke our wrapped
@@ -98,7 +102,7 @@ def request_cached(wrapped):
         if cached_result:
             return cached_result
         else:
-            result = wrapped(*args, **kwargs)
+            result = f(*args, **kwargs)
             if result:
                 rcache.data[cache_key] = result
 

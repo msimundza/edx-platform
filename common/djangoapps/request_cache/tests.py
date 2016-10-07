@@ -136,11 +136,10 @@ class TestRequestCache(TestCase):
         self.assertEqual(result, 2)
         self.assertEqual(to_be_wrapped.call_count, 3)
 
-    def test_request_cached_with_changing_keyword_args(self):
+    def test_request_cached_with_changing_kwargs(self):
         """
-        Ensure that changing keyword arguments to a decorated call does not affect
-        pulling a cached result for it.  Keyword arguments are not currently considered
-        as being part of the fingerprint of a call's cache key.
+        Ensure that calling a decorated function with different keyword arguments
+        will not use a cached value invoked by a previous call with different arguments.
         """
         RequestCache.clear_request_cache()
 
@@ -160,7 +159,7 @@ class TestRequestCache(TestCase):
         self.assertEqual(to_be_wrapped.call_count, 1)
 
         # This will be a miss, and make an underlying call.
-        result = wrapped(2, foo=2)
+        result = wrapped(1, foo=2)
         self.assertEqual(result, 2)
         self.assertEqual(to_be_wrapped.call_count, 2)
 
@@ -170,11 +169,6 @@ class TestRequestCache(TestCase):
         self.assertEqual(to_be_wrapped.call_count, 3)
 
         # This will be a hit, and not make an underlying call.
-        result = wrapped(2, foo=2)
-        self.assertEqual(result, 2)
-        self.assertEqual(to_be_wrapped.call_count, 3)
-
-        # This will be a hit, and not make an underlying call, even though foo is different.
-        result = wrapped(2, foo=9)
+        result = wrapped(1, foo=2)
         self.assertEqual(result, 2)
         self.assertEqual(to_be_wrapped.call_count, 3)
