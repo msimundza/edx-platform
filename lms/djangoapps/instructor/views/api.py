@@ -2822,22 +2822,7 @@ def start_certificate_regeneration(request, course_id):
     course_key = CourseKey.from_string(course_id)
     certificates_statuses = request.POST.getlist('certificate_statuses', [])
 
-    verified_with_audit_certs = False
-    if 'verified_users_with_audit_certs' in certificates_statuses:
-        verified_with_audit_certs = certificates_statuses.pop(
-            certificates_statuses.index('verified_users_with_audit_certs')
-        )
-
-    if verified_with_audit_certs and certificates_statuses:
-        return JsonResponse(
-            {'message': _(
-                "Please do not select 'verified learners with audit certificates' "
-                "along with other certificate statuses."
-            )},
-            status=400
-        )
-
-    if not (certificates_statuses or verified_with_audit_certs):
+    if not certificates_statuses:
         return JsonResponse(
             {'message': _('Please select one or more certificate statuses that require certificate regeneration.')},
             status=400
@@ -2848,14 +2833,26 @@ def start_certificate_regeneration(request, course_id):
         CertificateStatuses.downloadable,
         CertificateStatuses.error,
         CertificateStatuses.notpassing,
+        'verified_users_with_audit_certs',
     ]
-    if not (set(certificates_statuses).issubset(allowed_statuses) or verified_with_audit_certs):
+    if not set(certificates_statuses).issubset(allowed_statuses):
         return JsonResponse(
             {'message': _('Please select certificate statuses from the list only.')},
             status=400
         )
 
-    if verified_with_audit_certs:
+    if 1 == certificates_statuses.count('verified_users_with_audit_certs') != len(certificates_statuses):
+        return JsonResponse(
+            {'message': _(
+                "Please do not select 'verified learners with audit certificates' "
+                "along with other certificate statuses."
+            )},
+            status=400
+        )
+
+    verified_with_audit_certs = None
+    if 'verified_users_with_audit_certs' in certificates_statuses:
+        verified_with_audit_certs = 'verified_users_with_audit_certs'
         certificates_statuses = [CertificateStatuses.audit_passing, CertificateStatuses.audit_notpassing]
 
     try:
