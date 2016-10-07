@@ -406,6 +406,10 @@ class CourseTabList(List):
                 tabs[0]['name'] = _('Courseware')
                 tabs[1]['name'] = _('Course Info')
 
+        for index, tab in enumerate(tabs):
+            if tabs[index].get('type') == 'wiki':
+                del tabs[index]
+                
         return tabs
 
     @classmethod
