@@ -70,9 +70,27 @@
         max-width: 30%;
         float: right;
         padding-bottom: 50px;
+        border-left: 1px solid #ddd;
+        background: #f6f6f6;
+
         h1 {
             padding-top: 0 !important;
             margin-top: 15px !important;
+            text-transform: uppercase !important;
+        }
+
+        ol {
+            list-style: none;
+            li {
+                margin-left: 0;
+                a {
+                    color: #1aa1de;
+                    font-weight: 600;
+                    &:hover {
+                        color: #666;
+                    }
+                }
+            }
         }
     }
 }

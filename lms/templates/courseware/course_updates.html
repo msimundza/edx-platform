@@ -1,7 +1,8 @@
 <%! from django.utils.translation import ugettext as _ %>
 <section aria-labelledby="course-updates-heading">
-    <h2 class="hd hd-2 sr" id="course-updates-heading">${_('All course updates')}</h2>
-<div class="recent-updates">
+##    <h2 class="hd hd-2 sr" id="course-updates-heading">${_('All course updates')}</h2>
+## removed outer div to fix Eucalpytus overriding HMS custom theme 
+## <div class="recent-updates">
   % for index, update in enumerate(visible_updates):
     <article class="updates-article">
       % if not update.get("is_error"):
@@ -20,7 +21,7 @@
       </div>
     </article>
   % endfor
-</div>
+## </div>
 
 % if len(hidden_updates) > 0:
 <button
