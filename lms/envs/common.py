@@ -380,6 +380,7 @@ XQUEUE_WAITTIME_BETWEEN_REQUESTS = 5  # seconds
 PROJECT_ROOT = path(__file__).abspath().dirname().dirname()  # /edx-platform/lms
 REPO_ROOT = PROJECT_ROOT.dirname()
 COMMON_ROOT = REPO_ROOT / "common"
+OPENEDX_ROOT = REPO_ROOT / "openedx"
 ENV_ROOT = REPO_ROOT.dirname()  # virtualenv dir /edx-platform is in
 COURSES_ROOT = ENV_ROOT / "data"
 
@@ -460,10 +461,13 @@ OAUTH2_PROVIDER = {
 import tempfile
 MAKO_MODULE_DIR = os.path.join(tempfile.gettempdir(), 'mako_lms')
 MAKO_TEMPLATES = {}
-MAKO_TEMPLATES['main'] = [PROJECT_ROOT / 'templates',
-                          COMMON_ROOT / 'templates',
-                          COMMON_ROOT / 'lib' / 'capa' / 'capa' / 'templates',
-                          COMMON_ROOT / 'djangoapps' / 'pipeline_mako' / 'templates']
+MAKO_TEMPLATES['main'] = [
+    PROJECT_ROOT / 'templates',
+    COMMON_ROOT / 'templates',
+    COMMON_ROOT / 'lib' / 'capa' / 'capa' / 'templates',
+    COMMON_ROOT / 'djangoapps' / 'pipeline_mako' / 'templates',
+    OPENEDX_ROOT / 'core' / 'djangoapps' / 'cors_csrf' / 'templates',
+]
 
 # Django templating
 TEMPLATES = [
@@ -1120,8 +1124,8 @@ MIDDLEWARE_CLASSES = (
 
     # CORS and CSRF
     'corsheaders.middleware.CorsMiddleware',
-    'cors_csrf.middleware.CorsCSRFMiddleware',
-    'cors_csrf.middleware.CsrfCrossDomainCookieMiddleware',
+    'openedx.core.djangoapps.cors_csrf.middleware.CorsCSRFMiddleware',
+    'openedx.core.djangoapps.cors_csrf.middleware.CsrfCrossDomainCookieMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
 
     'splash.middleware.SplashMiddleware',
@@ -2063,7 +2067,7 @@ INSTALLED_APPS = (
 
     # CORS and cross-domain CSRF
     'corsheaders',
-    'cors_csrf',
+    'openedx.core.djangoapps.cors_csrf',
 
     'commerce',
 
