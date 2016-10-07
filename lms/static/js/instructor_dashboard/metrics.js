@@ -1,12 +1,12 @@
 (function() {
-  var Metrics, plantTimeout, std_ajax_err;
+  var Metrics, plantTimeout, statusAjaxError;
 
   plantTimeout = function() {
     return window.InstructorDashboard.util.plantTimeout.apply(this, arguments);
   };
 
-  std_ajax_err = function() {
-    return window.InstructorDashboard.util.std_ajax_err.apply(this, arguments);
+  statusAjaxError = function() {
+    return window.InstructorDashboard.util.statusAjaxError.apply(this, arguments);
   };
 
   Metrics = (function() {

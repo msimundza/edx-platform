@@ -9,7 +9,7 @@ define(['jquery', 'js/instructor_dashboard/student_admin', 'edx-ui-toolkit/js/ut
                 loadFixtures('js/fixtures/instructor_dashboard/student_admin.html');
                 window.InstructorDashboard = {};
                 window.InstructorDashboard.util = {
-                    std_ajax_err: std_ajax_err,
+                    statusAjaxError: statusAjaxError,
                     PendingInstructorTasks: PendingInstructorTasks,
                     create_task_list_table: create_task_list_table
                 };

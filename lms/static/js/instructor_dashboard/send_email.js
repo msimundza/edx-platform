@@ -1,12 +1,12 @@
 (function() {
-  var Email, KeywordValidator, PendingInstructorTasks, create_email_content_table, create_email_message_views, create_task_list_table, plantTimeout, std_ajax_err;
+  var Email, KeywordValidator, PendingInstructorTasks, create_email_content_table, create_email_message_views, create_task_list_table, plantTimeout, statusAjaxError;
 
   plantTimeout = function() {
     return window.InstructorDashboard.util.plantTimeout.apply(this, arguments);
   };
 
-  std_ajax_err = function() {
-    return window.InstructorDashboard.util.std_ajax_err.apply(this, arguments);
+  statusAjaxError = function() {
+    return window.InstructorDashboard.util.statusAjaxError.apply(this, arguments);
   };
 
   PendingInstructorTasks = function() {
@@ -105,7 +105,7 @@
               success: function(data) {
                 return _this.display_response(success_message);
               },
-              error: std_ajax_err(function() {
+              error: statusAjaxError(function() {
                 return _this.fail_with_error(gettext('Error sending email.'));
               })
             });
@@ -132,7 +132,7 @@
               });
             }
           },
-          error: std_ajax_err(function() {
+          error: statusAjaxError(function() {
             return _this.$history_request_response_error.text(gettext("There was an error obtaining email task history for this course."));
           })
         });
@@ -155,7 +155,7 @@
               });
             }
           },
-          error: std_ajax_err(function() {
+          error: statusAjaxError(function() {
             return _this.$content_request_response_error.text(gettext("There was an error obtaining email content history for this course."));
           })
         });

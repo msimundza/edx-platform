@@ -22,7 +22,7 @@
     }
   };
 
-  this.std_ajax_err = function(handler) {
+  this.statusAjaxError = function(handler) {
     return function(jqXHR, textStatus, errorThrown) {
       console.warn("ajax error\ntextStatus: " + textStatus + "\nerrorThrown: " + errorThrown);
       return handler.apply(this, arguments);
@@ -372,7 +372,7 @@
             return _this.$no_tasks_message.show();
           }
         },
-        error: std_ajax_err(function() {
+        error: statusAjaxError(function() {
           return console.error("Error finding pending tasks to display");
         })
       });
@@ -452,7 +452,7 @@
             return console.log("No reports ready for download");
           }
         },
-        error: function(std_ajax_err) {
+        error: function(statusAjaxError) {
           return console.error("Error finding report downloads");
         }
       });
@@ -510,7 +510,7 @@
     window.InstructorDashboard.util = {
       plantTimeout: plantTimeout,
       plantInterval: plantInterval,
-      std_ajax_err: std_ajax_err,
+      statusAjaxError: statusAjaxError,
       IntervalManager: IntervalManager,
       create_task_list_table: create_task_list_table,
       create_email_content_table: create_email_content_table,

@@ -1,5 +1,5 @@
 (function() {
-  var AuthList, AuthListWidget, BatchEnrollment, BetaTesterBulkAddition, MemberListWidget, Membership, emailStudents, plantTimeout, std_ajax_err,
+  var AuthList, AuthListWidget, BatchEnrollment, BetaTesterBulkAddition, MemberListWidget, Membership, emailStudents, plantTimeout, statusAjaxError,
     __hasProp = {}.hasOwnProperty,
     __extends = function(child, parent) { for (var key in parent) { if (__hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
 
@@ -7,8 +7,8 @@
     return window.InstructorDashboard.util.plantTimeout.apply(this, arguments);
   };
 
-  std_ajax_err = function() {
-    return window.InstructorDashboard.util.std_ajax_err.apply(this, arguments);
+  statusAjaxError = function() {
+    return window.InstructorDashboard.util.statusAjaxError.apply(this, arguments);
   };
 
   emailStudents = false;
@@ -179,7 +179,7 @@
         success: function(data) {
           return typeof cb === "function" ? cb(null, data[_this.rolename]) : void 0;
         },
-        error: std_ajax_err(function() {
+        error: statusAjaxError(function() {
           // Translators: A rolename appears this sentence. A rolename is something like "staff" or "beta tester".;          return typeof cb === "function" ? cb(gettext("Error fetching list for role") + (" '" + _this.rolename + "'")) : void 0;
         })
       });
@@ -199,7 +199,7 @@
         success: function(data) {
           return _this.member_response(data);
         },
-        error: std_ajax_err(function() {
+        error: statusAjaxError(function() {
           return typeof cb === "function" ? cb(gettext("Error changing user's permissions.")) : void 0;
         })
       });
@@ -382,7 +382,7 @@
           success: function(data) {
             return _this.display_response(data);
           },
-          error: std_ajax_err(function() {
+          error: statusAjaxError(function() {
             return _this.fail_with_error(gettext("Error adding/removing users as beta testers."));
           })
         });
@@ -545,7 +545,7 @@
           success: function(data) {
             return _this.display_response(data);
           },
-          error: std_ajax_err(function() {
+          error: statusAjaxError(function() {
             return _this.fail_with_error(gettext("Error enrolling/unenrolling users."));
           })
         });
@@ -849,7 +849,7 @@
           rolename: this.rolename
         },
         success: load_auth_list,
-        error: std_ajax_err(function() {
+        error: statusAjaxError(function() {
           return _this.$request_response_error.text("Error fetching list for '" + _this.rolename + "'");
         })
       });
@@ -874,7 +874,7 @@
         success: function(data) {
           return typeof cb === "function" ? cb(data) : void 0;
         },
-        error: std_ajax_err(function() {
+        error: statusAjaxError(function() {
           return _this.$request_response_error.text(gettext("Error changing user's permissions."));
         })
       });

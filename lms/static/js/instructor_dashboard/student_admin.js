@@ -1,8 +1,8 @@
 (function() {
-  var PendingInstructorTasks, create_task_list_table, find_and_assert, std_ajax_err;
+  var PendingInstructorTasks, create_task_list_table, find_and_assert, statusAjaxError;
 
-  std_ajax_err = function() {
-    return window.InstructorDashboard.util.std_ajax_err.apply(this, arguments);
+  statusAjaxError = function() {
+    return window.InstructorDashboard.util.statusAjaxError.apply(this, arguments);
   };
 
   create_task_list_table = function() {
@@ -77,7 +77,7 @@
           success: _this.clear_errors_then(function(data) {
             return window.location = data.progress_url;
           }),
-          error: std_ajax_err(function() {
+          error: statusAjaxError(function() {
             return _this.$request_response_error_progress.text(full_error_message);
           })
         });
@@ -115,7 +115,7 @@
           success: _this.clear_errors_then(function() {
             return alert(full_success_message);
           }),
-          error: std_ajax_err(function() {
+          error: statusAjaxError(function() {
             return _this.$request_response_error_grade.text(full_error_message);
           })
         });
@@ -154,7 +154,7 @@
             success: _this.clear_errors_then(function() {
               return alert(gettext('Module state successfully deleted.'));
             }),
-            error: std_ajax_err(function() {
+            error: statusAjaxError(function() {
               return _this.$request_response_error_grade.text(full_error_message);
             })
           });
@@ -194,7 +194,7 @@
           success: _this.clear_errors_then(function() {
             return alert(full_success_message);
           }),
-          error: std_ajax_err(function() {
+          error: statusAjaxError(function() {
             return _this.$request_response_error_grade.text(full_error_message);
           })
         });
@@ -226,7 +226,7 @@
           success: _this.clear_errors_then(function(data) {
             return create_task_list_table(_this.$table_task_history_single, data.tasks);
           }),
-          error: std_ajax_err(function() {
+          error: statusAjaxError(function() {
             return _this.$request_response_error_grade.text(full_error_message);
           })
         });
@@ -254,7 +254,7 @@
             });
             return alert(full_success_message);
           }),
-          error: std_ajax_err(function() {
+          error: statusAjaxError(function() {
             var error_message, full_error_message;
             error_message = gettext("Error resetting entrance exam attempts for student '{student_id}'. Make sure student identifier is correct.");
             full_error_message = interpolate_text(error_message, {
@@ -286,7 +286,7 @@
             });
             return alert(full_success_message);
           }),
-          error: std_ajax_err(function() {
+          error: statusAjaxError(function() {
             var error_message, full_error_message;
             error_message = gettext("Error starting a task to rescore entrance exam for student '{student_id}'. Make sure that entrance exam has problems in it and student identifier is correct.");
             full_error_message = interpolate_text(error_message, {
@@ -318,7 +318,7 @@
             success: _this.clear_errors_then(function(data) {
               return alert(data.message);
             }),
-            error: std_ajax_err(function() {
+            error: statusAjaxError(function() {
               var error_message;
               error_message = gettext("An error occurred. Make sure that the student's username or email address is correct and try again.");
               return _this.$request_response_error_ee.text(error_message);
@@ -349,7 +349,7 @@
             });
             return alert(full_success_message);
           }),
-          error: std_ajax_err(function() {
+          error: statusAjaxError(function() {
             var error_message, full_error_message;
             error_message = gettext("Error deleting entrance exam state for student '{student_id}'. Make sure student identifier is correct.");
             full_error_message = interpolate_text(error_message, {
@@ -376,7 +376,7 @@
           success: _this.clear_errors_then(function(data) {
             return create_task_list_table(_this.$table_entrance_exam_task_history, data.tasks);
           }),
-          error: std_ajax_err(function() {
+          error: statusAjaxError(function() {
             var error_message, full_error_message;
             error_message = gettext("Error getting entrance exam task history for student '{student_id}'. Make sure student identifier is correct.");
             full_error_message = interpolate_text(error_message, {
@@ -417,7 +417,7 @@
             success: _this.clear_errors_then(function() {
               return alert(full_success_message);
             }),
-            error: std_ajax_err(function() {
+            error: statusAjaxError(function() {
               return _this.$request_response_error_all.text(full_error_message);
             })
           });
@@ -456,7 +456,7 @@
             success: _this.clear_errors_then(function() {
               return alert(full_success_message);
             }),
-            error: std_ajax_err(function() {
+            error: statusAjaxError(function() {
               return _this.$request_response_error_all.text(full_error_message);
             })
           });
@@ -480,7 +480,7 @@
           success: _this.clear_errors_then(function(data) {
             return create_task_list_table(_this.$table_task_history_all, data.tasks);
           }),
-          error: std_ajax_err(function() {
+          error: statusAjaxError(function() {
             return _this.$request_response_error_all.text(gettext("Error listing task history for this student and problem."));
           })
         });
