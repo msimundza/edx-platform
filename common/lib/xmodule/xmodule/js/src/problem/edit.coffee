@@ -477,6 +477,18 @@ class @MarkdownEditingDescriptor extends XModule.Descriptor
                     string = '<numericalresponse answer="' + firstAnswer +  '">\n';
                   }
 
+                  getAnswerData = function(answerValue) {
+                      var answerData = {};
+                      var answerParams = /(.*?)\+\-\s*(.*?$)/.exec(answerValue);
+                      if(answerParams) {
+                          answerData.answer = answerParams[1].replace(/\s+/g, ''); // support inputs like 5*2 +- 10
+                          answerData.default = answerParams[2];
+                      } else {
+                          answerData.answer = answerValue.replace(/\s+/g, ''); // support inputs like 5*2
+                      }
+                      return answerData;
+                  }
+
                   // Additional answer case or= [e.g. or= 10]
                   // We are not considering values[0] which is firstAnswer
                   additionalAnswerString = '';
@@ -484,11 +496,16 @@ class @MarkdownEditingDescriptor extends XModule.Descriptor
                       var additionalTextHint = extractHint(values[i]);
                       var orMatch = /^or\=\s*(.*)/.exec(additionalTextHint.nothint);
                       if (orMatch) {
+                          var answerData = getAnswerData(orMatch[1]);
                           // additional_answer with answer= attribute
-                          additionalAnswerString += '  <additional_answer answer="' + orMatch[1] + '">';
+                          additionalAnswerString += '  <additional_answer answer="' + answerData.answer] + '">';
                           if (additionalTextHint.hint) {
                               additionalAnswerString += '<correcthint' + additionalTextHint.labelassign + '>' + additionalTextHint.hint + '</correcthint>';
                           }
+                          // Add response params to additional answers.
+                          // if(answerData.default) {
+                          //     additionalAnswerString += '  <responseparam type="tolerance" default="' + answerData.default + '" />\n';
+                          // }
                           additionalAnswerString += '</additional_answer>\n';
                       }
                   }
