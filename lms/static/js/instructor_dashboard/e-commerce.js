@@ -87,5 +87,15 @@
         return eCommerce;
     }());
 
-    window.InstructorDashboard.sections.ECommerce = ECommerce;
+    _.defaults(window, {
+        InstructorDashboard: {}
+    });
+
+    _.defaults(window.InstructorDashboard, {
+        sections: {}
+    });
+
+    _.defaults(window.InstructorDashboard.sections, {
+        ECommerce: ECommerce
+    });
 }).call(this);

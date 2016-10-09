@@ -177,5 +177,15 @@
         return extensions;
     }());
 
-    window.InstructorDashboard.sections.Extensions = Extensions;
+    if (typeof _ !== 'undefined' && _ !== null) {
+        _.defaults(window, {
+            InstructorDashboard: {}
+        });
+        _.defaults(window.InstructorDashboard, {
+            sections: {}
+        });
+        _.defaults(window.InstructorDashboard.sections, {
+            Extensions: Extensions
+        });
+    }
 }).call(this);

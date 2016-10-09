@@ -382,5 +382,15 @@
         return InstructorDashboardDataDownload;
     }());
 
-    window.InstructorDashboard.sections.DataDownload = DataDownload;
+    _.defaults(window, {
+        InstructorDashboard: {}
+    });
+
+    _.defaults(window.InstructorDashboard, {
+        sections: {}
+    });
+
+    _.defaults(window.InstructorDashboard.sections, {
+        DataDownload: DataDownload
+    });
 }).call(this);

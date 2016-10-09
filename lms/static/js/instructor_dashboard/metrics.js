@@ -1,37 +1,17 @@
 (function() {
-  var Metrics, plantTimeout, statusAjaxError;
+    'use strict';
+    var Metrics;
 
-  plantTimeout = function() {
-    return window.InstructorDashboard.util.plantTimeout.apply(this, arguments);
-  };
+    Metrics = (function() {
+        function metrics($section) {
+            this.$section = $section;
+            this.$section.data('wrapper', this);
+        }
 
-  statusAjaxError = function() {
-    return window.InstructorDashboard.util.statusAjaxError.apply(this, arguments);
-  };
+        metrics.prototype.onClickTitle = function() {};
 
-  Metrics = (function() {
+        return metrics;
+    }());
 
-    function Metrics($section) {
-      this.$section = $section;
-      this.$section.data('wrapper', this);
-    }
-
-    Metrics.prototype.onClickTitle = function() {};
-
-    return Metrics;
-
-  })();
-
-  if (typeof _ !== "undefined" && _ !== null) {
-    _.defaults(window, {
-      InstructorDashboard: {}
-    });
-    _.defaults(window.InstructorDashboard, {
-      sections: {}
-    });
-    _.defaults(window.InstructorDashboard.sections, {
-      Metrics: Metrics
-    });
-  }
-
+    window.InstructorDashboard.sections.Metrics = Metrics;
 }).call(this);
