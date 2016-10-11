@@ -252,11 +252,12 @@ class CurrentGradeViewTest(SharedModuleStoreTestCase, APITestCase):
         self.assertEqual(resp.data, [expected_data])  # pylint: disable=no-member
 
 
+@ddt.ddt
 class GradingPolicyTestMixin(object):
     """
     Mixin class for Grading Policy tests
     """
-    view = None
+    view_name = None
 
     def setUp(self):
         super(GradingPolicyTestMixin, self).setUp()
@@ -306,14 +307,6 @@ class GradingPolicyTestMixin(object):
                 display_name="HTML 1",
             )
 
-        cls.empty_course = CourseFactory.create(
-            start=datetime(2014, 6, 16, 14, 30),
-            end=datetime(2015, 1, 16),
-            org="MTD",
-            # Use mongo so that we can get a test with a SlashSeparatedCourseKey
-            default_store=ModuleStoreEnum.Type.mongo
-        )
-
     def http_get(self, uri, **headers):
         """
         Submit an HTTP GET request
@@ -327,58 +320,82 @@ class GradingPolicyTestMixin(object):
         response = self.client.get(uri, follow=True, **default_headers)
         return response
 
-    def http_get_for_course(self, course_id=None, **headers):
+    def assert_get_for_course(self, course_id=None, expected_status_code=200, **headers):
         """
-        Submit an HTTP GET request to the view for the given course
+        Submit an HTTP GET request to the view for the given course.
+        Validates the status_code of the response is as expected.
         """
 
-        return self.http_get(
-            reverse(self.view, kwargs={'course_id': course_id or self.course_id}),
+        response = self.http_get(
+            reverse(self.view_name, kwargs={'course_id': course_id or self.course_id}),
             **headers
         )
+        self.assertEqual(response.status_code, expected_status_code)
+        return response
+
+    def get_auth_header(self, user):
+        """
+        Returns Bearer auth header with a generated access token
+        for the given user.
+        """
+        access_token = AccessTokenFactory.create(user=user, client=self.oauth_client).token
+        return 'Bearer ' + access_token
 
     def test_get_invalid_course(self):
         """
-        The view should return a 404 if the course ID is invalid.
+        The view should return a 404 for an invalid course ID.
         """
-        response = self.http_get_for_course(self.invalid_course_id)
-        self.assertEqual(response.status_code, 404)
+        self.assert_get_for_course(course_id=self.invalid_course_id, expected_status_code=404)
 
     def test_get(self):
         """
-        The view should return a 200 if the course ID is valid.
+        The view should return a 200 for a valid course ID.
         """
-        response = self.http_get_for_course()
-        self.assertEqual(response.status_code, 200)
-
-        # Return the response so child classes do not have to repeat the request.
-        return response
+        return self.assert_get_for_course()
 
     def test_not_authenticated(self):
-        """ The view should return HTTP status 401 if no user is authenticated. """
-        # HTTP 401 should be returned if the user is not authenticated.
-        response = self.http_get_for_course(HTTP_AUTHORIZATION=None)
-        self.assertEqual(response.status_code, 401)
+        """
+        The view should return HTTP status 401 if user is unauthenticated.
+        """
+        self.assert_get_for_course(expected_status_code=401, HTTP_AUTHORIZATION=None)
+
+    def test_staff_authorized(self):
+        """
+        The view should return a 200 when provided an access token
+        for course staff.
+        """
+        user = StaffFactory(course_key=self.course.id)
+        auth_header = self.get_auth_header(user)
+        self.assert_get_for_course(HTTP_AUTHORIZATION=auth_header)
 
     def test_not_authorized(self):
-        user = StaffFactory(course_key=self.course.id)
-        access_token = AccessTokenFactory.create(user=user, client=self.oauth_client).token
-        auth_header = 'Bearer ' + access_token
+        """
+        The view should return HTTP status 404 when provided an
+        access token for an unauthorized user.
+        """
+        user = UserFactory()
+        auth_header = self.get_auth_header(user)
+        self.assert_get_for_course(expected_status_code=404, HTTP_AUTHORIZATION=auth_header)
 
-        # Access should be granted if the proper access token is supplied.
-        response = self.http_get_for_course(HTTP_AUTHORIZATION=auth_header)
-        self.assertEqual(response.status_code, 200)
-
-        # Access should be denied if the user is not course staff.
-        response = self.http_get_for_course(course_id=unicode(self.empty_course.id), HTTP_AUTHORIZATION=auth_header)
-        self.assertEqual(response.status_code, 404)
+    @ddt.data(ModuleStoreEnum.Type.mongo, ModuleStoreEnum.Type.split)
+    def test_course_keys(self, modulestore_type):
+        """
+        The view should be addressable by course-keys from both module stores.
+        """
+        course = CourseFactory.create(
+            start=datetime(2014, 6, 16, 14, 30),
+            end=datetime(2015, 1, 16),
+            org="MTD",
+            default_store=modulestore_type,
+        )
+        self.assert_get_for_course(course_id=unicode(course.id))
 
 
 class CourseGradingPolicyTests(GradingPolicyTestMixin, SharedModuleStoreTestCase):
     """
     Tests for CourseGradingPolicy view.
     """
-    view = 'grades_api:course_grading_policy'
+    view_name = 'grades_api:course_grading_policy'
 
     raw_grader = [
         {
@@ -429,7 +446,7 @@ class CourseGradingPolicyMissingFieldsTests(GradingPolicyTestMixin, SharedModule
     """
     Tests for CourseGradingPolicy view when fields are missing.
     """
-    view = 'grades_api:course_grading_policy'
+    view_name = 'grades_api:course_grading_policy'
 
     # Raw grader with missing keys
     raw_grader = [
