@@ -101,6 +101,30 @@ class TestCourseGradeFactory(GradeTestBase):
                 grade_factory.create(self.course)
         self.assertEqual(mock_save_grades.called, feature_flag and course_setting)
 
+    def test_course_grade_logging(self):
+        grade_factory = CourseGradeFactory(self.request.user)
+        with persistent_grades_feature_flags(
+                global_flag=True,
+                enabled_for_all_courses=False,
+                course_id=self.course.id,
+                enabled_for_course=True
+        ):
+            with patch('lms.djangoapps.grades.new.course_grade.log') as log_mock:
+                grade_factory.create(self.course)
+                log_mock.warning.assert_called_with(
+                    u"Persistent Grades: CourseGrade.{0}, course: {1}, user: {2}".format(
+                        u"compute_and_update, read_only: {0}, subsections read/created: {1}/{2}, blocks accessed: {3}, "
+                        u"total graded subsections: {4}".format(
+                            False,
+                            0,
+                            1,
+                            1,
+                            1,
+                        ),
+                        unicode(self.course.id),
+                        unicode(self.request.user.id),
+                    )
+                )
 
 @ddt.ddt
 class SubsectionGradeFactoryTest(GradeTestBase):
