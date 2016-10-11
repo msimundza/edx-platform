@@ -52,16 +52,17 @@ define(['../dateutil-iterator.js'], function(DateUtilIterator) {
                     en: 'due Oct 14, 2016 08:00 UTC',
                     ru: '14 окт. 2016 г. 08:00 UTC',
                     ar: '١٤ تشرين الأول أكتوبر ٢٠١٦ ٠٨:٠٠ UTC',
-                    fr: 'FARTFART'
+                    fr: '14 окт. 2016 г. 08:00 UTC'
                 };
                 var form = $('<span class="subtitle-name localized-datetime" data-timezone="UTC" data-datetime="2016-10-14 08:00:00+00:00" data-string="due"></span>');
                 // beforeEach(function() {
                 // });
                 Object.keys(TestLangs).forEach(function(key) {
-                    form.attr('lang', key);
+                    form.attr('lang', String(key));
                     $(document.body).append(form);
 
                     DateUtilIterator.transform(iterationKey);
+
                     expect(form.text()).toEqual(TestLangs[key]);
 
                     form.remove();

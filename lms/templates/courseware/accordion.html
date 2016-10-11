@@ -64,12 +64,12 @@ else:
 
                             ## TEMP COMMENT
                             ## Note the addition of data elements data-timezone, data-datetime, and data-lang
-                            <span class="subtitle-name localized-datetime" lang="${language}" data-timezone="${time_zone}" data-datetime="${section['due']}" data-string="due">${due_date}</span>
+                            <span class="subtitle-name localized-datetime" lang="ru" data-timezone="${time_zone}" data-datetime="${section['due']}" data-string="due">${due_date}</span>
                         % endif
                     % else:
                         ## non-proctored section, we just show the exam format and the due date
                         ## this is the standard case in edx-platform
-                        <span class="subtitle-name localized-datetime" lang="${language}" data-timezone="${time_zone}" data-datetime="${section['due']}" data-string="due">${due_date}</span>
+                        <span class="subtitle-name localized-datetime" lang="ru" data-timezone="${time_zone}" data-datetime="${section['due']}" data-string="due">${due_date}</span>
                         ## <!-- data-string="${section.format}"-->
 
                         % if 'graded' in section and section['graded']:

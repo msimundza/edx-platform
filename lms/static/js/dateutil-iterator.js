@@ -54,9 +54,9 @@
                     /* eslint-enable no-alert, no-console */
 
                     /*
-                     uncomment the following line once approved
-                     */
-                    // $(this).text(displayString);
+                    uncomment the following line once approved
+                    */
+                    $(this).text(displayDatetime);
                 }
             })
         };
