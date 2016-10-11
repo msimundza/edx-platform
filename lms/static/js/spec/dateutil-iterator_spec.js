@@ -55,7 +55,6 @@ define(['../dateutil-iterator.js', 'moment-with-locales'], function(DateUtilIter
                     fr: '14 окт. 2016 г. 08:00 UTC'
                 };
                 var form = $('<span class="subtitle-name localized-datetime" data-timezone="UTC" data-datetime="2016-10-14 08:00:00+00:00" data-string="due"></span>');
-                debugger;
                 Object.keys(TestLangs).forEach(function(key) {
                     form.attr('lang', String(key));
                     $(document.body).append(form);
