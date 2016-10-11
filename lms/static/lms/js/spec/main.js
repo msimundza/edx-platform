@@ -732,7 +732,7 @@
         'js/spec/learner_dashboard/course_card_view_spec.js',
         'js/spec/learner_dashboard/course_enroll_view_spec.js',
         'js/spec/markdown_editor_spec.js',
-        'js/spec/date-util-iterator_spec.js',
+        'js/spec/dateutil-iterator_spec.js',
         'js/spec/navigation_spec.js',
         'js/spec/search/search_spec.js',
         'js/spec/shoppingcart/shoppingcart_spec.js',
