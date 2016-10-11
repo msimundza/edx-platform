@@ -1,9 +1,14 @@
 ## coding=utf-8
+
+## Pages currently use v1 styling by default. Once the Pattern Library
+## rollout has been completed, this default can be switched to v2.
+<%! main_css = "style-main-v1" %>
+
 <%namespace name='static' file='static_content.html'/>
 <%!
 from django.utils.translation import ugettext as _
-from openedx.core.lib.js_utils import (
-    escape_json_dumps, escape_js_string
+from openedx.core.djangolib.js_utils import (
+    dump_js_escaped_json, js_escaped_string
 )
 %>
 <!doctype html>
@@ -29,7 +34,8 @@ from openedx.core.lib.js_utils import (
     <%static:css group='style-vendor'/>
     <%static:css group='style-vendor-tinymce-content'/>
     <%static:css group='style-vendor-tinymce-skin'/>
-    <%static:css group='style-main'/>
+   
+    <%static:css group='${self.attr.main_css}'/>
 
     <%include file="widgets/segment-io.html" />
 
@@ -45,7 +51,7 @@ from openedx.core.lib.js_utils import (
     <a class="nav-skip" href="#content">${_("Skip to main content")}</a>
 
     <script type="text/javascript">
-      window.baseUrl = "${escape_js_string(settings.STATIC_URL) | n}";
+      window.baseUrl = "${js_escaped_string(settings.STATIC_URL) | n}";
       var require = {baseUrl: window.baseUrl};
     </script>
     <script type="text/javascript" src="${static.url("js/vendor/require.js")}"></script>
@@ -83,7 +89,7 @@ from openedx.core.lib.js_utils import (
             % if context_course:
               require(['js/factories/course'], function(CourseFactory) {
                   CourseFactory({
-                      id: "${escape_js_string(context_course.id) | n}",
+                      id: "${js_escaped_string(context_course.id) | n}",
                       name: "${context_course.display_name_with_default_escaped | h}",
                       url_name: "${context_course.location.name | h}",
                       org: "${context_course.location.org | h}",
