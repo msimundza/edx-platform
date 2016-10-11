@@ -1,3 +1,5 @@
+/* globals *, interpolate_text */
+
 (function() {
     'use strict';
     var PendingInstructorTasks, createTaskListTable, findAndAssert, statusAjaxError;

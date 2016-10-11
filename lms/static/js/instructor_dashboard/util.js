@@ -1,3 +1,5 @@
+/* globals _, Logger, Slick */
+
 (function() {
     'use strict';
     var IntervalManager, KeywordValidator, ReportDownloads,
