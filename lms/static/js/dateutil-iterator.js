@@ -56,7 +56,7 @@
                     /*
                     uncomment the following line once approved
                     */
-                    $(this).text(displayDatetime);
+                    // $(this).text(displayDatetime);
                 }
             })
         };

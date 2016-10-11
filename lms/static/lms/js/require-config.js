@@ -57,7 +57,7 @@
         paths: {
             'annotator_1.2.9': 'js/vendor/edxnotes/annotator-full.min',
             'date': 'js/vendor/date',
-            'moment': 'js/vendor/moment.min',
+            'moment': 'common/js/vendor/moment-with-locales.min',
             'moment-with-locales': 'xmodule_js/common_static/js/vendor/moment-with-locales.min',
             'moment-timezone': 'common/js/vendor/moment-timezone-with-data.min',
             'text': 'js/vendor/requirejs/text',
