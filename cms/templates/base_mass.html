@@ -96,7 +96,7 @@ from openedx.core.djangolib.js_utils import (
                       num: "${context_course.location.course | h}",
                       display_course_number: "${_(context_course.display_coursenumber) if context_course.display_coursenumber else ''}",
                       revision: "${context_course.location.revision | h}",
-                      self_paced: ${escape_json_dumps(context_course.self_paced) | n}
+                      self_paced: ${dump_js_escaped_json(context_course.self_paced) | n}
                   });
               });
             % endif
