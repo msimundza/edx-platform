@@ -1,4 +1,4 @@
-/* globals _ */
+/* globals _, AutoEnrollmentViaCsv, NotificationModel, NotificationView */
 
 /*
 Membership Section
@@ -13,6 +13,7 @@ such that the value can be defined later than this assignment (file load order).
     'use strict';
     var AuthList, AuthListWidget, BatchEnrollment, BetaTesterBulkAddition,
         MemberListWidget, Membership, emailStudents, plantTimeout, statusAjaxError,
+        /* eslint-disable */
         hasProp = {}.hasOwnProperty,
         extend = function(child, parent) {
             for (var key in parent) {
@@ -28,6 +29,7 @@ such that the value can be defined later than this assignment (file load order).
             child.super = parent.prototype;
             return child;
         };
+        /* eslint-enable */
 
     plantTimeout = function() {
         return window.InstructorDashboard.util.plantTimeout.apply(this, arguments);
@@ -182,13 +184,15 @@ such that the value can be defined later than this assignment (file load order).
         };
 
         AuthListWidget.prototype.clear_errors = function() {
-            var ref;
-            return (ref = this.$error_section) != null ? ref.text('') : void 0;
+            var ref, result;
+            result = (ref = this.$error_section) != null ? ref.text('') : void 0;
+            return result;
         };
 
         AuthListWidget.prototype.show_errors = function(msg) {
-            var ref;
-            return (ref = this.$error_section) != null ? ref.text(msg) : void 0;
+            var ref, result;
+            result = (ref = this.$error_section) != null ? ref.text(msg) : void 0;
+            return result;
         };
 
         AuthListWidget.prototype.get_member_list = function(cb) {
@@ -457,7 +461,7 @@ such that the value can be defined later than this assignment (file load order).
             renderList = function(label, ids) {
                 var identifier, $idsList, $taskResSection, j, len1;
                 $taskResSection = $('<div/>', {
-                    'class': 'request-res-section'
+                    class: 'request-res-section'
                 });
                 $taskResSection.append($('<h3/>', {
                     text: label
@@ -633,13 +637,13 @@ such that the value can be defined later than this assignment (file load order).
                 } else if (!studentResults.after.enrollment) {
                     notenrolled.push(studentResults);
                 } else {
-                    console.warn('student results not reported to user');  // eslint-disable-line no-alert
+                    console.warn('student results not reported to user');  // eslint-disable-line no-console
                 }
             }
             renderList = function(label, ids) {
                 var identifier, $idsList, $taskResSection, h, len3;
                 $taskResSection = $('<div/>', {
-                    'class': 'request-res-section'
+                    class: 'request-res-section'
                 });
                 $taskResSection.append($('<h3/>', {
                     text: label
@@ -672,7 +676,7 @@ such that the value can be defined later than this assignment (file load order).
                     } else if (dataFromServer.action === 'unenroll') {
                         return 'There was an error unenrolling:';
                     } else {
-                        console.warn("unknown action from server '" + dataFromServer.action + "'");
+                        console.warn("unknown action from server '" + dataFromServer.action + "'");  // eslint-disable-line no-console
                         return 'There was an error processing:';
                     }
                 }());
@@ -973,7 +977,7 @@ such that the value can be defined later than this assignment (file load order).
         return membership;
     }());
 
-     _.defaults(window, {
+    _.defaults(window, {
         InstructorDashboard: {}
     });
 

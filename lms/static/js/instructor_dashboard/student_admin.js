@@ -1,4 +1,4 @@
-/* globals *, interpolate_text */
+/* globals _, interpolate_text */
 
 (function() {
     'use strict';
@@ -44,7 +44,6 @@
             this.$field_exam_grade = this.$section.find("input[name='entrance-exam-student-select-grade']");
             this.$btn_reset_entrance_exam_attempts = this.$section.find("input[name='reset-entrance-exam-attempts']");
             this.$btn_delete_entrance_exam_state = this.$section.find("input[name='delete-entrance-exam-state']");
-            console.log(this.$section);
             this.$btn_rescore_entrance_exam = this.$section.find("input[name='rescore-entrance-exam']");
             this.$btn_skip_entrance_exam = this.$section.find("input[name='skip-entrance-exam']");
             this.$btn_entrance_exam_task_history = this.$section.find("input[name='entrance-exam-task-history']");
@@ -566,6 +565,6 @@
     });
 
     _.defaults(window.InstructorDashboard.sections, {
-        StudentAdmin: StudentAdmin
+        StudentAdmin: this.StudentAdmin
     });
 }).call(this);

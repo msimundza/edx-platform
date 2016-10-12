@@ -1,4 +1,4 @@
-/* globals _ */
+/* globals _, SendEmail */
 
 (function() {
     'use strict';
@@ -253,6 +253,6 @@
     });
 
     _.defaults(window.InstructorDashboard.sections, {
-        Email: Email
+        Email: this.Email
     });
 }).call(this);

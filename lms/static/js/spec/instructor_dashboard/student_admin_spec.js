@@ -1,3 +1,4 @@
+/* globals _, interpolate_text, statusAjaxError, PendingInstructorTasks, createTaskListTable*/
 define(['jquery', 'js/instructor_dashboard/student_admin', 'edx-ui-toolkit/js/utils/spec-helpers/ajax-helpers'],
     function($, StudentAdmin, AjaxHelpers) {
         // 'js/instructor_dashboard/student_admin'
@@ -23,152 +24,162 @@ define(['jquery', 'js/instructor_dashboard/student_admin', 'edx-ui-toolkit/js/ut
             });
 
             it('initiates resetting of entrance exam when button is clicked', function() {
+                var successMessage = gettext("Entrance exam attempts is being reset for student '{student_id}'.");
+                var fullSuccessMessage = interpolate_text(successMessage, {
+                    student_id: uniqStudentIdentifier
+                });
+                var url = dashboardApiUrl + '/reset_student_attempts_for_entrance_exam';
+
+                // Spy on AJAX requests
+                var requests = AjaxHelpers.requests(this);
+
+                // Verify that the client contacts the server to start instructor task
+                var params = $.param({
+                    unique_student_identifier: uniqStudentIdentifier,
+                    delete_module: false
+                });
+
                 studentadmin.$btn_reset_entrance_exam_attempts.click();
                 // expect error to be shown since student identifier is not set
                 expect(studentadmin.$request_err_ee.text()).toEqual(
                     gettext('Please enter a student email address or username.')
                 );
 
-                var success_message = gettext("Entrance exam attempts is being reset for student '{student_id}'.");
-                var full_success_message = interpolate_text(success_message, {
-                    student_id: uniqStudentIdentifier
-                });
-
-                // Spy on AJAX requests
-                var requests = AjaxHelpers.requests(this);
-
                 studentadmin.$field_exam_grade.val(uniqStudentIdentifier);
                 studentadmin.$btn_reset_entrance_exam_attempts.click();
-                // Verify that the client contacts the server to start instructor task
-                var params = $.param({
-                    unique_student_identifier: uniqStudentIdentifier,
-                    delete_module: false
-                });
-                var url = dashboardApiUrl + '/reset_student_attempts_for_entrance_exam';
+
                 AjaxHelpers.expectPostRequest(requests, url, params);
 
                 // Simulate a success response from the server
                 AjaxHelpers.respondWithJson(requests, {
-                    message: full_success_message
+                    message: fullSuccessMessage
                 });
-                expect(alertMsg).toEqual(full_success_message);
+                expect(alertMsg).toEqual(fullSuccessMessage);
             });
 
             it('shows an error when resetting of entrance exam fails', function() {
+                var url = dashboardApiUrl + '/reset_student_attempts_for_entrance_exam';
                 // Spy on AJAX requests
                 var requests = AjaxHelpers.requests(this);
-                studentadmin.$field_exam_grade.val(uniqStudentIdentifier);
-                studentadmin.$btn_reset_entrance_exam_attempts.click();
                 // Verify that the client contacts the server to start instructor task
                 var params = $.param({
                     unique_student_identifier: uniqStudentIdentifier,
                     delete_module: false
                 });
-                var url = dashboardApiUrl + '/reset_student_attempts_for_entrance_exam';
+                var errorMessage = gettext("Error resetting entrance exam attempts for student '{student_id}'. Make sure student identifier is correct."); //  eslint-disable-line max-len
+                var fullErrorMessage = interpolate_text(errorMessage, {
+                    student_id: uniqStudentIdentifier
+                });
+
+                studentadmin.$field_exam_grade.val(uniqStudentIdentifier);
+                studentadmin.$btn_reset_entrance_exam_attempts.click();
+
                 AjaxHelpers.expectPostRequest(requests, url, params);
 
                 // Simulate an error response from the server
                 AjaxHelpers.respondWithError(requests, 400, {});
 
-                var error_message = gettext("Error resetting entrance exam attempts for student '{student_id}'. Make sure student identifier is correct.");
-                var full_error_message = interpolate_text(error_message, {
-                    student_id: uniqStudentIdentifier
-                });
-                expect(studentadmin.$request_err_ee.text()).toEqual(full_error_message);
+                expect(studentadmin.$request_err_ee.text()).toEqual(fullErrorMessage);
             });
 
             it('initiates rescoring of the entrance exam when the button is clicked', function() {
+                var successMessage = gettext("Started entrance exam rescore task for student '{student_id}'." +
+                    " Click the 'Show Background Task History for Student' button to see the status of the task."); //  eslint-disable-line max-len
+                var fullSuccessMessage = interpolate_text(successMessage, {
+                    student_id: uniqStudentIdentifier
+                });
+                var url = dashboardApiUrl + '/rescore_entrance_exam';
+
+                // Spy on AJAX requests
+                var requests = AjaxHelpers.requests(this);
+                // Verify that the client contacts the server to start instructor task
+                var params = $.param({
+                    unique_student_identifier: uniqStudentIdentifier
+                });
+
                 studentadmin.$btn_rescore_entrance_exam.click();
                 // expect error to be shown since student identifier is not set
                 expect(studentadmin.$request_err_ee.text()).toEqual(
                     gettext('Please enter a student email address or username.')
                 );
 
-                var success_message = gettext("Started entrance exam rescore task for student '{student_id}'." +
-                    " Click the 'Show Background Task History for Student' button to see the status of the task.");
-                var full_success_message = interpolate_text(success_message, {
-                    student_id: uniqStudentIdentifier
-                });
-
-                // Spy on AJAX requests
-                var requests = AjaxHelpers.requests(this);
-
                 studentadmin.$field_exam_grade.val(uniqStudentIdentifier);
                 studentadmin.$btn_rescore_entrance_exam.click();
-                // Verify that the client contacts the server to start instructor task
-                var params = $.param({
-                    unique_student_identifier: uniqStudentIdentifier
-                });
-                var url = dashboardApiUrl + '/rescore_entrance_exam';
+
                 AjaxHelpers.expectPostRequest(requests, url, params);
 
                 // Simulate a success response from the server
                 AjaxHelpers.respondWithJson(requests, {
-                    message: full_success_message
+                    message: fullSuccessMessage
                 });
-                expect(alertMsg).toEqual(full_success_message);
+                expect(alertMsg).toEqual(fullSuccessMessage);
             });
 
             it('shows an error when entrance exam rescoring fails', function() {
+                var url = dashboardApiUrl + '/rescore_entrance_exam';
                 // Spy on AJAX requests
                 var requests = AjaxHelpers.requests(this);
-                studentadmin.$field_exam_grade.val(uniqStudentIdentifier);
-                studentadmin.$btn_rescore_entrance_exam.click();
                 // Verify that the client contacts the server to start instructor task
                 var params = $.param({
                     unique_student_identifier: uniqStudentIdentifier
                 });
-                var url = dashboardApiUrl + '/rescore_entrance_exam';
+                var errorMessage = gettext(
+                    "Error starting a task to rescore entrance exam for student '{student_id}'." +
+                    ' Make sure that entrance exam has problems in it and student identifier is correct.'
+                );
+                var fullErrorMessage = interpolate_text(errorMessage, {
+                    student_id: uniqStudentIdentifier
+                });
+
+                studentadmin.$field_exam_grade.val(uniqStudentIdentifier);
+                studentadmin.$btn_rescore_entrance_exam.click();
+
                 AjaxHelpers.expectPostRequest(requests, url, params);
 
                 // Simulate an error response from the server
                 AjaxHelpers.respondWithError(requests, 400, {});
 
-                var error_message = gettext("Error starting a task to rescore entrance exam for student '{student_id}'." +
-                    ' Make sure that entrance exam has problems in it and student identifier is correct.');
-                var full_error_message = interpolate_text(error_message, {
-                    student_id: uniqStudentIdentifier
-                });
-                expect(studentadmin.$request_err_ee.text()).toEqual(full_error_message);
+                expect(studentadmin.$request_err_ee.text()).toEqual(fullErrorMessage);
             });
 
             it('initiates skip entrance exam when button is clicked', function() {
+                var successMessage = "This student ('{student_id}') will skip the entrance exam.";
+                var fullSuccessMessage = interpolate_text(successMessage, {
+                    student_id: uniqStudentIdentifier
+                });
+                var url = dashboardApiUrl + '/mark_student_can_skip_entrance_exam';
+
+                // Spy on AJAX requests
+                var requests = AjaxHelpers.requests(this);
+
                 studentadmin.$btn_skip_entrance_exam.click();
                 // expect error to be shown since student identifier is not set
                 expect(studentadmin.$request_err_ee.text()).toEqual(
                     gettext("Enter a student's username or email address.")
                 );
 
-                var success_message = "This student ('{student_id}') will skip the entrance exam.";
-                var full_success_message = interpolate_text(success_message, {
-                    student_id: uniqStudentIdentifier
-                });
-
-                // Spy on AJAX requests
-                var requests = AjaxHelpers.requests(this);
-
                 studentadmin.$field_exam_grade.val(uniqStudentIdentifier);
                 studentadmin.$btn_skip_entrance_exam.click();
                 // Verify that the client contacts the server to start instructor task
-                var url = dashboardApiUrl + '/mark_student_can_skip_entrance_exam';
                 AjaxHelpers.expectRequest(requests, 'POST', url, $.param({
                     unique_student_identifier: uniqStudentIdentifier
                 }));
 
                 // Simulate a success response from the server
                 AjaxHelpers.respondWithJson(requests, {
-                    message: full_success_message
+                    message: fullSuccessMessage
                 });
-                expect(alertMsg).toEqual(full_success_message);
+                expect(alertMsg).toEqual(fullSuccessMessage);
             });
 
             it('shows an error when skip entrance exam fails', function() {
                 // Spy on AJAX requests
                 var requests = AjaxHelpers.requests(this);
+                var url = dashboardApiUrl + '/mark_student_can_skip_entrance_exam';
+                var errorMessage = "An error occurred. Make sure that the student's username or email address is correct and try again."; //  eslint-disable-line max-len
                 studentadmin.$field_exam_grade.val(uniqStudentIdentifier);
                 studentadmin.$btn_skip_entrance_exam.click();
-                // Verify that the client contacts the server to start instructor task
-                var url = dashboardApiUrl + '/mark_student_can_skip_entrance_exam';
+
                 AjaxHelpers.expectRequest(requests, 'POST', url, $.param({
                     unique_student_identifier: uniqStudentIdentifier
                 }));
@@ -176,103 +187,97 @@ define(['jquery', 'js/instructor_dashboard/student_admin', 'edx-ui-toolkit/js/ut
                 // Simulate an error response from the server
                 AjaxHelpers.respondWithError(requests, 400, {});
 
-                var error_message = "An error occurred. Make sure that the student's username or email address is correct and try again.";
-                expect(studentadmin.$request_err_ee.text()).toEqual(error_message);
+                expect(studentadmin.$request_err_ee.text()).toEqual(errorMessage);
             });
 
             it('initiates delete student state for entrance exam when button is clicked', function() {
+                var successMessage = gettext("Entrance exam state is being deleted for student '{student_id}'.");
+                var fullSuccessMessage = interpolate_text(successMessage, {
+                    student_id: uniqStudentIdentifier
+                });
+                var url = dashboardApiUrl + '/reset_student_attempts_for_entrance_exam';
+
+                // Spy on AJAX requests
+                var requests = AjaxHelpers.requests(this);
+                // Verify that the client contacts the server to start instructor task
+                var params = $.param({
+                    unique_student_identifier: uniqStudentIdentifier,
+                    delete_module: true
+                });
                 studentadmin.$btn_delete_entrance_exam_state.click();
                 // expect error to be shown since student identifier is not set
                 expect(studentadmin.$request_err_ee.text()).toEqual(
                     gettext('Please enter a student email address or username.')
                 );
 
-                var success_message = gettext("Entrance exam state is being deleted for student '{student_id}'.");
-                var full_success_message = interpolate_text(success_message, {
-                    student_id: uniqStudentIdentifier
-                });
-
-                // Spy on AJAX requests
-                var requests = AjaxHelpers.requests(this);
-
                 studentadmin.$field_exam_grade.val(uniqStudentIdentifier);
                 studentadmin.$btn_delete_entrance_exam_state.click();
-                // Verify that the client contacts the server to start instructor task
-                var params = $.param({
-                    unique_student_identifier: uniqStudentIdentifier,
-                    delete_module: true
-                });
-                var url = dashboardApiUrl + '/reset_student_attempts_for_entrance_exam';
+
                 AjaxHelpers.expectPostRequest(requests, url, params);
 
                 // Simulate a success response from the server
                 AjaxHelpers.respondWithJson(requests, {
-                    message: full_success_message
+                    message: fullSuccessMessage
                 });
-                expect(alertMsg).toEqual(full_success_message);
+                expect(alertMsg).toEqual(fullSuccessMessage);
             });
 
             it('shows an error when delete student state for entrance exam fails', function() {
+                var url = dashboardApiUrl + '/reset_student_attempts_for_entrance_exam';
                 // Spy on AJAX requests
                 var requests = AjaxHelpers.requests(this);
-                studentadmin.$field_exam_grade.val(uniqStudentIdentifier);
-                studentadmin.$btn_delete_entrance_exam_state.click();
-                // Verify that the client contacts the server to start instructor task
                 var params = $.param({
                     unique_student_identifier: uniqStudentIdentifier,
                     delete_module: true
                 });
-                var url = dashboardApiUrl + '/reset_student_attempts_for_entrance_exam';
+                var errorMessage = gettext("Error deleting entrance exam state for student '{student_id}'. " +
+                    'Make sure student identifier is correct.'); //  eslint-disable-line max-len
+                var fullErrorMessage = interpolate_text(errorMessage, {
+                    student_id: uniqStudentIdentifier
+                });
+                studentadmin.$field_exam_grade.val(uniqStudentIdentifier);
+                studentadmin.$btn_delete_entrance_exam_state.click();
+                // Verify that the client contacts the server to start instructor task
                 AjaxHelpers.expectPostRequest(requests, url, params);
 
                 // Simulate an error response from the server
                 AjaxHelpers.respondWithError(requests, 400, {});
 
-                var error_message = gettext("Error deleting entrance exam state for student '{student_id}'. " +
-                    'Make sure student identifier is correct.');
-                var full_error_message = interpolate_text(error_message, {
-                    student_id: uniqStudentIdentifier
-                });
-                expect(studentadmin.$request_err_ee.text()).toEqual(full_error_message);
+                expect(studentadmin.$request_err_ee.text()).toEqual(fullErrorMessage);
             });
 
             it('initiates listing of entrance exam task history when button is clicked', function() {
+                var url = dashboardApiUrl + '/list_entrance_exam_instructor_tasks';
+
+                // Spy on AJAX requests
+                var requests = AjaxHelpers.requests(this);
+                var params = $.param({
+                    unique_student_identifier: uniqStudentIdentifier
+                });
                 studentadmin.$btn_entrance_exam_task_history.click();
                 // expect error to be shown since student identifier is not set
                 expect(studentadmin.$request_err_ee.text()).toEqual(
                     gettext("Enter a student's username or email address.")
                 );
 
-                var success_message = gettext("Entrance exam state is being deleted for student '{student_id}'.");
-                var full_success_message = interpolate_text(success_message, {
-                    student_id: uniqStudentIdentifier
-                });
-
-                // Spy on AJAX requests
-                var requests = AjaxHelpers.requests(this);
-
                 studentadmin.$field_exam_grade.val(uniqStudentIdentifier);
                 studentadmin.$btn_entrance_exam_task_history.click();
                 // Verify that the client contacts the server to start instructor task
-                var params = $.param({
-                    unique_student_identifier: uniqStudentIdentifier
-                });
-                var url = dashboardApiUrl + '/list_entrance_exam_instructor_tasks';
                 AjaxHelpers.expectPostRequest(requests, url, params);
 
                 // Simulate a success response from the server
                 AjaxHelpers.respondWithJson(requests, {
-                    'tasks': [
+                    tasks: [
                         {
-                            'status': 'Incomplete',
-                            'task_type': 'rescore_problem',
-                            'task_id': '9955d413-eac1-441f-978d-27c60dd1c946',
-                            'created': '2015-02-19T10:59:01+00:00',
-                            'task_input': '{"entrance_exam_url": "i4x://PU/FSc/chapter/d2204197cce443c4a0d5c852d4e7f638", "student": "audit"}',
-                            'duration_sec': 'unknown',
-                            'task_message': 'No status information available',
-                            'requester': 'staff',
-                            'task_state': 'QUEUING'
+                            status: 'Incomplete',
+                            task_type: 'rescore_problem',
+                            task_id: '9955d413-eac1-441f-978d-27c60dd1c946',
+                            created: '2015-02-19T10:59:01+00:00',
+                            task_input: '{"entrance_exam_url": "i4x://PU/FSc/chapter/d2204197cce443c4a0d5c852d4e7f638", "student": "audit"}', //  eslint-disable-line max-len
+                            duration_sec: 'unknown',
+                            task_message: 'No status information available',
+                            requester: 'staff',
+                            task_state: 'QUEUING'
                         }
                     ]
                 });
@@ -280,26 +285,26 @@ define(['jquery', 'js/instructor_dashboard/student_admin', 'edx-ui-toolkit/js/ut
             });
 
             it('shows an error when listing entrance exam task history fails', function() {
+                var url = dashboardApiUrl + '/list_entrance_exam_instructor_tasks';
                 // Spy on AJAX requests
                 var requests = AjaxHelpers.requests(this);
-                studentadmin.$field_exam_grade.val(uniqStudentIdentifier);
-                studentadmin.$btn_entrance_exam_task_history.click();
-                // Verify that the client contacts the server to start instructor task
                 var params = $.param({
                     unique_student_identifier: uniqStudentIdentifier
                 });
-                var url = dashboardApiUrl + '/list_entrance_exam_instructor_tasks';
+                var errorMessage = gettext("Error getting entrance exam task history for student '{student_id}'. " +
+                    'Make sure student identifier is correct.');
+                var fullErrorMessage = interpolate_text(errorMessage, {
+                    student_id: uniqStudentIdentifier
+                });
+                studentadmin.$field_exam_grade.val(uniqStudentIdentifier);
+                studentadmin.$btn_entrance_exam_task_history.click();
+                // Verify that the client contacts the server to start instructor task
                 AjaxHelpers.expectPostRequest(requests, url, params);
 
                 // Simulate an error response from the server
                 AjaxHelpers.respondWithError(requests, 400, {});
 
-                var error_message = gettext("Error getting entrance exam task history for student '{student_id}'. " +
-                    'Make sure student identifier is correct.');
-                var full_error_message = interpolate_text(error_message, {
-                    student_id: uniqStudentIdentifier
-                });
-                expect(studentadmin.$request_err_ee.text()).toEqual(full_error_message);
+                expect(studentadmin.$request_err_ee.text()).toEqual(fullErrorMessage);
             });
         });
     });

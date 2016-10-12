@@ -1,4 +1,4 @@
-/* globals _, Logger, Slick */
+/* globals _, Logger, Slick, tinyMCE, InstructorDashboard */
 
 (function() {
     'use strict';
@@ -517,7 +517,7 @@
         return ReportDownloads;
     }());
 
-    if (typeof _ !== "undefined" && _ !== null) {
+    if (typeof _ !== 'undefined' && _ !== null) {
         _.defaults(window, {
             InstructorDashboard: {}
         });
