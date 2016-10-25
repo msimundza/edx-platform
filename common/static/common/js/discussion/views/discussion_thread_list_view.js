@@ -430,14 +430,21 @@
             };
 
             DiscussionThreadListView.prototype.showBrowseMenu = function(initialLoad) {
+                console.log('1');
+
                 if (!this.isBrowseMenuVisible()) {
-                    this.$('.forum-nav-browse-menu-wrapper').show();
-                    this.$('.forum-nav-thread-list-wrapper').hide();
-                    if (!initialLoad) {
-                        $('.forum-nav-browse-filter-input').focus();
-                    }
-                    $('body').bind('click', this.hideBrowseMenu);
-                    return this.updateSidebar();
+                    var that = this;
+                    setTimeout(function() {
+                        console.log('2');
+                        that.$('.forum-nav-browse-menu-wrapper').show();
+                        that.$('.forum-nav-thread-list-wrapper').hide();
+                        if (!initialLoad) {
+                            console.log('3');
+                            $('.forum-nav-browse-filter-input').focus();
+                        }
+                        $('body').bind('click', that.hideBrowseMenu);
+                        return that.updateSidebar();
+                    }, 100);
                 }
             };
 
