@@ -131,10 +131,21 @@
         var dat = $("#sequence-list li button.active").data('element');
         if(dat!=undefined) {
           current = dat;
-          $('.pagination-xb').html(current + '/' + max);
+          $('.pagination-xb').html('<span class="current-section-unit">' + current + '</span>' + '/' + 
+                                    '<span class="max-section-unit">' + max + '</span>');
         }
       });
-
-    },1000);
+      if(max == 1){
+        $('.button-next').prepend('<div class="section-next-square"></div>');
+        $('.button-previous').append('<div class="section-previous-square"></div>');
+      }else if (current == max) {
+        $('.button-next').prepend('<div class="section-next-square"></div>');
+      } else if (current == 1) {            
+        $('.button-previous').append('<div class="section-previous-square"></div>');
+      } else {
+        $('.section-next-square').remove();
+        $('.section-previous-square').remove();            
+      }
+    },1000); 
   });
 </script>
